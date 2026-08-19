@@ -3146,3 +3146,3195 @@ Arrow Function → "Where was I created?"
 **Arrow functions do not have their own `this`, `arguments`, or `prototype`. They inherit `this` and `arguments` from their surrounding lexical scope, cannot be used as constructors with `new`, and their `this` cannot be changed using `call()`, `apply()`, or `bind()`.**
 
 <!-- ============================== -->
+
+Bilkul. setTimeout() ke output questions mein sabse important cheez timing nahi, execution order samajhna hai.
+
+setTimeout() callback ko turant execute nahi karta. Wo callback ko baad mein run karne ke liye schedule karta hai.
+
+Isliye pehle synchronous code complete hota hai, uske baad setTimeout() callback execute hota hai.
+
+## 🔥🔥🔥 Predict output involving `setTimeout()`
+
+**`setTimeout()` is used to schedule a function to run after a minimum delay. The callback does not execute immediately; JavaScript first completes the current synchronous code.**
+
+Simple words:
+
+> **`setTimeout()` bolta hai: "Ye function abhi mat chalao, baad mein chala dena."**
+
+---
+
+# 🔥 1. Basic `setTimeout()`
+
+```js
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timeout");
+}, 1000);
+
+console.log("End");
+```
+
+### Output
+
+```text
+Start
+End
+Timeout
+```
+
+### Why?
+
+Bahut log sochte hain:
+
+```text
+Start
+wait 1 second
+Timeout
+End
+```
+
+❌ Aisa nahi hota.
+
+Instead:
+
+```text
+console.log("Start")
+        ↓
+Start
+
+
+setTimeout(...)
+        ↓
+Callback schedule
+
+
+console.log("End")
+        ↓
+End
+
+
+Current code finishes
+        ↓
+Later callback runs
+        ↓
+Timeout
+```
+
+So:
+
+```text
+Start
+End
+Timeout
+```
+
+---
+
+# 🔥🔥 Important: `1000` means exactly 1 second nahi
+
+Consider:
+
+```js
+setTimeout(() => {
+  console.log("Hello");
+}, 1000);
+```
+
+`1000` means:
+
+> **Callback will not run before approximately 1000 ms.**
+
+It does **not** guarantee:
+
+```text
+Exactly after 1 second
+```
+
+If JavaScript is busy doing other work, callback can run later.
+
+Think:
+
+```text
+1000 ms
+   ↓
+Minimum delay
+   ↓
+Callback becomes eligible to run
+   ↓
+Event loop runs it when possible
+```
+
+---
+
+# 🔥🔥 2. `setTimeout(..., 0)`
+
+This is one of the **most important output questions**.
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+console.log("C");
+```
+
+### Output
+
+```text
+A
+C
+B
+```
+
+Many beginners think:
+
+```text
+A
+B
+C
+```
+
+❌ Wrong.
+
+Even with `0` delay, the callback does not run immediately.
+
+```text
+console.log("A")
+      ↓
+A
+
+
+setTimeout(..., 0)
+      ↓
+Callback scheduled
+
+
+console.log("C")
+      ↓
+C
+
+
+Synchronous code finished
+      ↓
+Callback runs
+      ↓
+B
+```
+
+Therefore:
+
+```text
+A
+C
+B
+```
+
+### 🧠 Remember
+
+```text
+setTimeout(..., 0)
+        ↓
+NOT "run immediately"
+        ↓
+"run later"
+```
+
+---
+
+# 🔥🔥🔥 3. Multiple `setTimeout()`
+
+```js
+setTimeout(() => {
+  console.log("First");
+}, 1000);
+
+setTimeout(() => {
+  console.log("Second");
+}, 500);
+
+setTimeout(() => {
+  console.log("Third");
+}, 0);
+
+console.log("Done");
+```
+
+### Output
+
+```text
+Done
+Third
+Second
+First
+```
+
+Why?
+
+First:
+
+```text
+Done
+```
+
+because it is synchronous.
+
+Then callbacks become eligible according to their delays:
+
+```text
+0 ms    → Third
+500 ms  → Second
+1000 ms → First
+```
+
+So:
+
+```text
+Done
+Third
+Second
+First
+```
+
+---
+
+# 🔥🔥 4. Same Delay
+
+What if all have the same delay?
+
+```js
+setTimeout(() => {
+  console.log("A");
+}, 1000);
+
+setTimeout(() => {
+  console.log("B");
+}, 1000);
+
+setTimeout(() => {
+  console.log("C");
+}, 1000);
+```
+
+### Output
+
+```text
+A
+B
+C
+```
+
+Why?
+
+They were scheduled in this order:
+
+```text
+A
+↓
+B
+↓
+C
+```
+
+All have the same delay, so their callbacks are queued in that order.
+
+---
+
+# 🔥🔥🔥 5. `setTimeout()` Inside a Loop with `var`
+
+This is a **very famous interview question**.
+
+```js
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => {
+    console.log(i);
+  }, 1000);
+}
+```
+
+### Output
+
+After approximately 1 second:
+
+```text
+3
+3
+3
+```
+
+Why?
+
+Because `var` is **function-scoped**.
+
+There is one shared `i`.
+
+The loop finishes first:
+
+```text
+i = 0
+ ↓
+i = 1
+ ↓
+i = 2
+ ↓
+i = 3
+```
+
+Then the callbacks execute.
+
+All callbacks access the same `i`:
+
+```text
+Callback 1 → i → 3
+Callback 2 → i → 3
+Callback 3 → i → 3
+```
+
+Therefore:
+
+```text
+3
+3
+3
+```
+
+---
+
+# 🔥🔥🔥 6. `setTimeout()` Inside a Loop with `let`
+
+Now change `var` to `let`.
+
+```js
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => {
+    console.log(i);
+  }, 1000);
+}
+```
+
+### Output
+
+```text
+0
+1
+2
+```
+
+Why?
+
+`let` creates a separate binding for each loop iteration.
+
+Think:
+
+```text
+Iteration 1
+i = 0
+ ↓
+callback remembers 0
+
+
+Iteration 2
+i = 1
+ ↓
+callback remembers 1
+
+
+Iteration 3
+i = 2
+ ↓
+callback remembers 2
+```
+
+So:
+
+```text
+0
+1
+2
+```
+
+This combines:
+
+```text
+setTimeout
++
+closure
++
+let/var
+```
+
+Very important interview pattern.
+
+---
+
+# 🔥🔥 7. `setTimeout()` with a Normal Function
+
+```js
+function greet() {
+  console.log("Hello");
+}
+
+setTimeout(greet, 1000);
+
+console.log("Done");
+```
+
+### Output
+
+```text
+Done
+Hello
+```
+
+Because:
+
+```text
+setTimeout(greet, 1000)
+        ↓
+schedule greet
+        ↓
+console.log("Done")
+        ↓
+Done
+        ↓
+later
+        ↓
+Hello
+```
+
+---
+
+# 🔥🔥 8. `setTimeout()` with Arguments
+
+We can pass arguments to the callback:
+
+```js
+function greet(name) {
+  console.log(`Hello ${name}`);
+}
+
+setTimeout(greet, 1000, "Ajay");
+```
+
+After the delay:
+
+```text
+Hello Ajay
+```
+
+Think:
+
+```text
+setTimeout(
+  function,
+  delay,
+  argument
+)
+```
+
+---
+
+# 🔥🔥 9. `setTimeout()` and `clearTimeout()`
+
+We can cancel a scheduled timeout.
+
+```js
+const timer = setTimeout(() => {
+  console.log("Hello");
+}, 1000);
+
+clearTimeout(timer);
+```
+
+### Output
+
+```text
+
+```
+
+Nothing is printed.
+
+Why?
+
+```text
+setTimeout()
+    ↓
+Timer scheduled
+    ↓
+clearTimeout()
+    ↓
+Timer cancelled
+    ↓
+Callback doesn't run
+```
+
+---
+
+# 🔥🔥🔥 10. Important Output Question
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+setTimeout(() => {
+  console.log("C");
+}, 0);
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Why?
+
+Synchronous code:
+
+```text
+A
+D
+```
+
+Then the callbacks execute in the order they were scheduled:
+
+```text
+B
+C
+```
+
+Final:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥🔥 11. Nested `setTimeout()`
+
+This is another common output question.
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+
+  setTimeout(() => {
+    console.log("C");
+  }, 0);
+}, 0);
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Let's understand:
+
+First:
+
+```text
+A
+```
+
+Then first timeout is scheduled.
+
+Then:
+
+```text
+D
+```
+
+After synchronous code:
+
+```text
+B
+```
+
+While executing the `B` callback, another timeout is scheduled.
+
+That second callback runs later:
+
+```text
+C
+```
+
+So:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥🔥 12. `setTimeout()` + Promise
+
+This is **very important** for experienced JavaScript interviews.
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+C
+B
+```
+
+Why?
+
+First, synchronous code:
+
+```text
+A
+D
+```
+
+Then JavaScript processes the **microtask queue**, where Promise callbacks go:
+
+```text
+C
+```
+
+Then the timer callback runs:
+
+```text
+B
+```
+
+So:
+
+```text
+A
+D
+C
+B
+```
+
+### Important Rule
+
+For this common case:
+
+```text
+Synchronous code
+      ↓
+Microtasks
+(Promise callbacks)
+      ↓
+Timer/task callbacks
+(setTimeout)
+```
+
+---
+
+# 🔥🔥🔥 13. Multiple Promises and `setTimeout()`
+
+```js
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timeout");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("Promise");
+});
+
+console.log("End");
+```
+
+### Output
+
+```text
+Start
+End
+Promise
+Timeout
+```
+
+Remember:
+
+```text
+Start
+ ↓
+End
+ ↓
+Promise
+ ↓
+Timeout
+```
+
+---
+
+# 🔥🔥🔥 14. `setTimeout()` Doesn't Block JavaScript
+
+Consider:
+
+```js
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Timeout");
+}, 0);
+
+console.log("End");
+```
+
+`setTimeout()` does not stop JavaScript and wait.
+
+It schedules the callback and allows the rest of the synchronous code to continue.
+
+```text
+Start
+ ↓
+Schedule timer
+ ↓
+End
+ ↓
+Timer callback later
+ ↓
+Timeout
+```
+
+That's why output is:
+
+```text
+Start
+End
+Timeout
+```
+
+---
+
+# 🔥🔥🔥 15. Famous Interview Question
+
+Predict the output:
+
+```js
+console.log(1);
+
+setTimeout(() => {
+  console.log(2);
+}, 0);
+
+console.log(3);
+
+setTimeout(() => {
+  console.log(4);
+}, 0);
+
+console.log(5);
+```
+
+### Output
+
+```text
+1
+3
+5
+2
+4
+```
+
+Why?
+
+All normal `console.log()` calls execute first:
+
+```text
+1
+3
+5
+```
+
+Then timers execute in the order they were scheduled:
+
+```text
+2
+4
+```
+
+Final:
+
+```text
+1
+3
+5
+2
+4
+```
+
+---
+
+# 🧠 How to Solve `setTimeout()` Output Questions
+
+Whenever you see `setTimeout()`, follow these steps.
+
+### Step 1 — Ignore the timer temporarily
+
+```js
+setTimeout(() => {
+  console.log("A");
+}, 0);
+```
+
+Think:
+
+```text
+"A ko abhi mat chalao.
+Baad mein chalao."
+```
+
+---
+
+### Step 2 — Run all synchronous code first
+
+Example:
+
+```js
+console.log("A");
+
+setTimeout(...);
+
+console.log("B");
+```
+
+First:
+
+```text
+A
+B
+```
+
+---
+
+### Step 3 — Then process callbacks
+
+After the current synchronous work:
+
+```text
+setTimeout callback
+```
+
+runs when the event loop gets to it.
+
+---
+
+### Step 4 — If Promises are present
+
+Remember the common ordering:
+
+```text
+Synchronous code
+       ↓
+Promise microtasks
+       ↓
+setTimeout callbacks
+```
+
+---
+
+# 🔥🔥🔥 Most Important Patterns
+
+### Pattern 1
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+console.log("C");
+```
+
+Output:
+
+```text
+A
+C
+B
+```
+
+---
+
+### Pattern 2
+
+```js
+for (var i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}
+```
+
+Output:
+
+```text
+3
+3
+3
+```
+
+---
+
+### Pattern 3
+
+```js
+for (let i = 0; i < 3; i++) {
+  setTimeout(() => console.log(i), 0);
+}
+```
+
+Output:
+
+```text
+0
+1
+2
+```
+
+---
+
+### Pattern 4
+
+```js
+console.log("A");
+
+Promise.resolve().then(() => console.log("B"));
+
+setTimeout(() => console.log("C"), 0);
+
+console.log("D");
+```
+
+Output:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🧠 Final Memory Trick
+
+```text
+setTimeout()
+     ↓
+"Run this later"
+     ↓
+Does NOT stop current code
+```
+
+For common browser/Node.js output questions:
+
+```text
+┌─────────────────────┐
+│ Synchronous code    │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Microtasks          │
+│ Promise.then()      │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Timer callbacks     │
+│ setTimeout()        │
+└─────────────────────┘
+```
+
+### 🔥🔥🔥 Interview Answer
+
+**`setTimeout()` schedules a callback to run after a minimum delay. It does not block the current synchronous code. The current synchronous code executes first, and the timer callback runs later when the event loop processes the timer/task queue.**
+
+<!-- ======================== -->
+
+Bilkul. Promises ke output questions mein 3 cheezein sabse important hain:
+
+1. Synchronous code pehle chalega.
+2. Promise callbacks (then/catch/finally) microtask queue mein jaate hain.
+3. Microtasks generally setTimeout() callbacks se pehle execute hote hain.
+
+## 🔥🔥🔥 Predict output involving Promises
+
+**A Promise represents the eventual result of an asynchronous operation. Promise callbacks such as `.then()`, `.catch()`, and `.finally()` are handled asynchronously through the microtask queue.**
+
+Simple words:
+
+> **Promise ka `.then()` turant execute nahi hota. Pehle current synchronous code complete hota hai, phir Promise ka callback run hota hai.**
+
+---
+
+# 🔥 1. Basic Promise Output
+
+```js
+console.log("Start");
+
+Promise.resolve().then(() => {
+  console.log("Promise");
+});
+
+console.log("End");
+```
+
+### Output
+
+```text
+Start
+End
+Promise
+```
+
+### Why?
+
+First normal code:
+
+```text
+Start
+End
+```
+
+Then Promise callback:
+
+```text
+Promise
+```
+
+Think:
+
+```text
+console.log("Start")
+        ↓
+Start
+
+Promise.then(...)
+        ↓
+Microtask queue
+
+console.log("End")
+        ↓
+End
+
+Synchronous code finished
+        ↓
+Promise callback
+        ↓
+Promise
+```
+
+So:
+
+```text
+Start
+End
+Promise
+```
+
+---
+
+# 🔥🔥 2. Promise vs `setTimeout()`
+
+This is **very important**.
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+C
+B
+```
+
+Why?
+
+First synchronous code:
+
+```text
+A
+D
+```
+
+Then Promise microtask:
+
+```text
+C
+```
+
+Then timer callback:
+
+```text
+B
+```
+
+So:
+
+```text
+Synchronous
+    ↓
+A
+D
+    ↓
+Promise microtask
+    ↓
+C
+    ↓
+setTimeout
+    ↓
+B
+```
+
+### 🧠 Remember
+
+```text
+Promise.then()
+      ↓
+Microtask
+
+setTimeout()
+      ↓
+Task/Timer callback
+
+Microtask generally runs first.
+```
+
+---
+
+# 🔥🔥 3. Promise Constructor Runs Immediately
+
+This is an important trick.
+
+Look at:
+
+```js
+console.log("A");
+
+new Promise((resolve) => {
+  console.log("B");
+  resolve();
+}).then(() => {
+  console.log("C");
+});
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+B
+D
+C
+```
+
+Many people think `B` will also be delayed because it is inside a Promise.
+
+❌ No.
+
+The Promise constructor's executor runs **synchronously**.
+
+So:
+
+```text
+A
+ ↓
+Promise constructor starts
+ ↓
+B
+ ↓
+resolve()
+ ↓
+.then() scheduled as microtask
+ ↓
+D
+ ↓
+C
+```
+
+Therefore:
+
+```text
+A
+B
+D
+C
+```
+
+### 🔥 Important Rule
+
+```text
+new Promise((resolve) => {
+   // This part runs immediately
+});
+```
+
+But:
+
+```js
+promise.then(() => {
+  // This runs later as a microtask
+});
+```
+
+---
+
+# 🔥🔥🔥 4. `resolve()` Does Not Immediately Run `.then()`
+
+```js
+console.log("A");
+
+const promise = new Promise((resolve) => {
+  console.log("B");
+  resolve("Hello");
+});
+
+promise.then((value) => {
+  console.log(value);
+});
+
+console.log("C");
+```
+
+### Output
+
+```text
+A
+B
+C
+Hello
+```
+
+Why?
+
+Promise executor:
+
+```text
+B
+```
+
+runs immediately.
+
+But:
+
+```js
+promise.then(...)
+```
+
+runs later.
+
+So:
+
+```text
+A
+B
+C
+Hello
+```
+
+---
+
+# 🔥🔥 5. Promise Chain
+
+```js
+Promise.resolve(10)
+  .then((value) => {
+    console.log(value);
+    return value + 10;
+  })
+  .then((value) => {
+    console.log(value);
+  });
+```
+
+### Output
+
+```text
+10
+20
+```
+
+First `.then()` receives:
+
+```text
+10
+```
+
+Then it returns:
+
+```text
+20
+```
+
+The next `.then()` receives that returned value.
+
+Think:
+
+```text
+Promise.resolve(10)
+        ↓
+.then()
+value = 10
+        ↓
+return 20
+        ↓
+next .then()
+value = 20
+```
+
+---
+
+# 🔥🔥🔥 6. Promise Chain + Synchronous Code
+
+```js
+console.log("A");
+
+Promise.resolve(10)
+  .then((value) => {
+    console.log(value);
+    return value + 10;
+  })
+  .then((value) => {
+    console.log(value);
+  });
+
+console.log("B");
+```
+
+### Output
+
+```text
+A
+B
+10
+20
+```
+
+Why?
+
+Synchronous:
+
+```text
+A
+B
+```
+
+Then Promise microtasks:
+
+```text
+10
+20
+```
+
+---
+
+# 🔥🔥 7. `return` in Promise Chain
+
+```js
+Promise.resolve(5)
+  .then((value) => {
+    return value * 2;
+  })
+  .then((value) => {
+    console.log(value);
+  });
+```
+
+### Output
+
+```text
+10
+```
+
+Because:
+
+```text
+5
+ ↓
+× 2
+ ↓
+10
+ ↓
+next then
+ ↓
+10
+```
+
+---
+
+# 🔥🔥 8. Forgetting `return`
+
+This is a common interview trap.
+
+```js
+Promise.resolve(5)
+  .then((value) => {
+    value * 2;
+  })
+  .then((value) => {
+    console.log(value);
+  });
+```
+
+### Output
+
+```text
+undefined
+```
+
+Why?
+
+The first `.then()` does:
+
+```js
+value * 2;
+```
+
+but doesn't return it.
+
+So JavaScript effectively gets:
+
+```js
+return undefined;
+```
+
+Therefore the next `.then()` receives:
+
+```text
+undefined
+```
+
+---
+
+# 🔥🔥🔥 9. `Promise.resolve()` with a Value
+
+```js
+Promise.resolve("Hello").then((value) => {
+  console.log(value);
+});
+```
+
+### Output
+
+```text
+Hello
+```
+
+`Promise.resolve("Hello")` creates an already fulfilled Promise.
+
+Then `.then()` receives:
+
+```text
+Hello
+```
+
+---
+
+# 🔥🔥 10. `Promise.reject()` and `catch()`
+
+```js
+Promise.reject("Error").catch((error) => {
+  console.log(error);
+});
+```
+
+### Output
+
+```text
+Error
+```
+
+The rejected Promise goes to `.catch()`.
+
+Think:
+
+```text
+Promise.reject()
+      ↓
+Rejected
+      ↓
+catch()
+      ↓
+Error
+```
+
+---
+
+# 🔥🔥 11. `then()` vs `catch()`
+
+```js
+Promise.resolve("Success")
+  .then((value) => {
+    console.log(value);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+```
+
+### Output
+
+```text
+Success
+```
+
+Why doesn't `catch()` run?
+
+Because the Promise was fulfilled and no error occurred.
+
+---
+
+# 🔥🔥 12. Error Inside `.then()`
+
+```js
+Promise.resolve()
+  .then(() => {
+    throw new Error("Something went wrong");
+  })
+  .catch((error) => {
+    console.log(error.message);
+  });
+```
+
+### Output
+
+```text
+Something went wrong
+```
+
+The error thrown inside `.then()` makes the returned Promise rejected.
+
+Then `.catch()` handles it.
+
+```text
+.then()
+  ↓
+throw error
+  ↓
+Promise rejected
+  ↓
+.catch()
+  ↓
+Something went wrong
+```
+
+---
+
+# 🔥🔥🔥 13. `finally()`
+
+```js
+Promise.resolve("Success")
+  .then((value) => {
+    console.log(value);
+  })
+  .finally(() => {
+    console.log("Finally");
+  });
+```
+
+### Output
+
+```text
+Success
+Finally
+```
+
+`finally()` runs after the Promise settles, whether it is fulfilled or rejected.
+
+---
+
+# 🔥🔥 14. `Promise.all()`
+
+```js
+Promise.all([
+  Promise.resolve(10),
+  Promise.resolve(20),
+  Promise.resolve(30),
+]).then((values) => {
+  console.log(values);
+});
+```
+
+### Output
+
+```text
+[10, 20, 30]
+```
+
+`Promise.all()` waits for all Promises to fulfill.
+
+---
+
+# 🔥🔥🔥 15. `Promise.all()` with Rejection
+
+```js
+Promise.all([Promise.resolve(10), Promise.reject("Error"), Promise.resolve(30)])
+  .then((values) => {
+    console.log(values);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+```
+
+### Output
+
+```text
+Error
+```
+
+If one Promise rejects, `Promise.all()` rejects.
+
+So:
+
+```text
+Promise 1 → Success
+Promise 2 → ❌ Error
+Promise 3 → Success
+
+        ↓
+
+Promise.all()
+        ↓
+Rejected
+        ↓
+catch()
+```
+
+---
+
+# 🔥🔥🔥 16. Promise + `setTimeout()` Inside `.then()`
+
+```js
+console.log("A");
+
+Promise.resolve().then(() => {
+  console.log("B");
+
+  setTimeout(() => {
+    console.log("C");
+  }, 0);
+});
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Let's follow it:
+
+```text
+A
+ ↓
+Promise scheduled
+ ↓
+D
+ ↓
+Promise callback
+ ↓
+B
+ ↓
+setTimeout scheduled
+ ↓
+C
+```
+
+Therefore:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥🔥 17. Promise Inside `setTimeout()`
+
+Now reverse it:
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+
+  Promise.resolve().then(() => {
+    console.log("C");
+  });
+}, 0);
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Why?
+
+First:
+
+```text
+A
+D
+```
+
+Then timer callback:
+
+```text
+B
+```
+
+Inside that callback, Promise creates a microtask:
+
+```text
+C
+```
+
+The microtask runs after the current timer callback finishes.
+
+So:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥🔥 18. Multiple Promise Callbacks
+
+```js
+console.log("A");
+
+Promise.resolve().then(() => {
+  console.log("B");
+});
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Why?
+
+The two Promise callbacks are added to the microtask queue in this order:
+
+```text
+B
+C
+```
+
+After synchronous code:
+
+```text
+A
+D
+```
+
+they execute:
+
+```text
+B
+C
+```
+
+Final:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥🔥 19. Promise Chain Creates More Microtasks
+
+This one looks tricky:
+
+```js
+Promise.resolve()
+  .then(() => {
+    console.log("A");
+  })
+  .then(() => {
+    console.log("B");
+  });
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+```
+
+### Output
+
+```text
+A
+C
+B
+```
+
+Why?
+
+Initially the queue is:
+
+```text
+First Promise → A
+Second Promise → C
+```
+
+So:
+
+```text
+A
+```
+
+runs first.
+
+When `A`'s `.then()` finishes, its next `.then()` (`B`) is added to the **end** of the microtask queue.
+
+At that point:
+
+```text
+C
+B
+```
+
+are waiting.
+
+So:
+
+```text
+A
+C
+B
+```
+
+This is a **very good interview-level question**.
+
+---
+
+# 🔥🔥🔥 20. Famous Mixed Question
+
+Predict:
+
+```js
+console.log("1");
+
+setTimeout(() => {
+  console.log("2");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("3");
+});
+
+console.log("4");
+
+Promise.resolve().then(() => {
+  console.log("5");
+});
+
+console.log("6");
+```
+
+### Output
+
+```text
+1
+4
+6
+3
+5
+2
+```
+
+### Step-by-Step
+
+### Synchronous code
+
+```text
+1
+4
+6
+```
+
+Promise callbacks are waiting:
+
+```text
+3
+5
+```
+
+Timer is waiting:
+
+```text
+2
+```
+
+Then microtasks:
+
+```text
+3
+5
+```
+
+Then timer:
+
+```text
+2
+```
+
+Final:
+
+```text
+1
+4
+6
+3
+5
+2
+```
+
+---
+
+# 🧠 How to Solve Promise Output Questions
+
+Whenever you see Promises, use this process.
+
+### Step 1 — Run synchronous code first
+
+```js
+console.log("A");
+
+Promise.resolve().then(...);
+
+console.log("B");
+```
+
+First:
+
+```text
+A
+B
+```
+
+---
+
+### Step 2 — Put `.then()` / `.catch()` callbacks in the Microtask Queue
+
+```text
+Promise.then()
+      ↓
+Microtask Queue
+```
+
+---
+
+### Step 3 — Execute microtasks in queue order
+
+If:
+
+```text
+B
+C
+D
+```
+
+were added in that order:
+
+```text
+B
+C
+D
+```
+
+will execute in that order, assuming no additional queueing changes the sequence.
+
+---
+
+### Step 4 — Remember `setTimeout()`
+
+For common browser/Node.js output questions:
+
+```text
+Synchronous
+    ↓
+Microtasks
+(Promise)
+    ↓
+Timer callbacks
+(setTimeout)
+```
+
+---
+
+# 🔥🔥🔥 Most Important Rules
+
+```text
+1. Promise constructor executor
+   → runs immediately
+
+
+2. .then()
+   → runs asynchronously as a microtask
+
+
+3. .catch()
+   → runs as a microtask when rejection is handled
+
+
+4. .finally()
+   → runs after the Promise settles
+
+
+5. Promise callbacks
+   → generally run before setTimeout callbacks
+
+
+6. return value from .then()
+   → becomes the value for the next .then()
+
+
+7. No return
+   → next .then() receives undefined
+
+
+8. Error thrown in .then()
+   → next rejection handler/catch can handle it
+
+
+9. Promise.resolve()
+   → creates a fulfilled Promise
+
+
+10. Promise.reject()
+    → creates a rejected Promise
+```
+
+## 🧠 Final Memory Trick
+
+```text
+JavaScript Output Question
+
+        ↓
+
+1️⃣ Synchronous code
+        ↓
+2️⃣ Promise microtasks
+        ↓
+3️⃣ setTimeout / timer callbacks
+```
+
+And the **most important distinction**:
+
+```text
+new Promise(() => {
+   console.log("A");
+});
+```
+
+`A` → **immediately**
+
+But:
+
+```js
+promise.then(() => {
+  console.log("B");
+});
+```
+
+`B` → **later, as a microtask**
+
+### 🔥🔥🔥 Interview Answer
+
+**Promise executors run synchronously when the Promise is created, but `.then()`, `.catch()`, and `.finally()` callbacks run asynchronously as microtasks. Therefore, synchronous code executes first, followed by Promise microtasks, and then timer callbacks such as `setTimeout()` in the common event-loop scenarios used in output questions.**
+
+<!-- ========================= -->
+
+Bilkul. Ye previous Promise + setTimeout() questions ka next level hai. Isme bas ek hierarchy yaad rakho:
+
+Synchronous code → Microtasks → Macrotasks
+
+Aur sabse important:
+
+Microtask queue ko JavaScript ek macrotask ke baad completely drain karta hai, before moving to the next macrotask.
+
+## 🔥🔥🔥 Predict output involving Microtasks and Macrotasks
+
+JavaScript asynchronous code ko different queues mein handle karta hai.
+
+For interview output questions, the important ones are:
+
+```text
+Synchronous Code
+       ↓
+Microtask Queue
+       ↓
+Macrotask Queue
+```
+
+### Microtasks
+
+Common examples:
+
+```js
+Promise.then();
+Promise.catch();
+Promise.finally();
+queueMicrotask();
+```
+
+### Macrotasks
+
+Common examples:
+
+```js
+setTimeout();
+setInterval();
+```
+
+For basic interview questions, remember:
+
+> **Microtasks run before the next macrotask.**
+
+---
+
+# 🔥 1. Basic Microtask vs Macrotask
+
+```js
+console.log("A");
+
+Promise.resolve().then(() => {
+  console.log("B");
+});
+
+setTimeout(() => {
+  console.log("C");
+}, 0);
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+### Why?
+
+First, synchronous code:
+
+```text
+A
+D
+```
+
+Then Promise callback goes to the microtask queue:
+
+```text
+B
+```
+
+`setTimeout()` goes to the macrotask queue:
+
+```text
+C
+```
+
+So:
+
+```text
+Synchronous
+   ↓
+A
+D
+
+Microtask
+   ↓
+B
+
+Macrotask
+   ↓
+C
+```
+
+Final:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥 2. `setTimeout(0)` Does NOT Beat a Promise
+
+```js
+setTimeout(() => {
+  console.log("Timeout");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("Promise");
+});
+```
+
+### Output
+
+```text
+Promise
+Timeout
+```
+
+Even though both are scheduled immediately:
+
+```text
+Promise → Microtask
+Timeout → Macrotask
+```
+
+Microtask gets processed first.
+
+---
+
+# 🔥🔥 3. Multiple Microtasks
+
+```js
+Promise.resolve().then(() => {
+  console.log("A");
+});
+
+Promise.resolve().then(() => {
+  console.log("B");
+});
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+```
+
+### Output
+
+```text
+A
+B
+C
+```
+
+They are added to the microtask queue in this order:
+
+```text
+Microtask Queue:
+
+A
+B
+C
+```
+
+JavaScript processes them in queue order.
+
+---
+
+# 🔥🔥 4. Multiple Macrotasks
+
+```js
+setTimeout(() => {
+  console.log("A");
+}, 0);
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+setTimeout(() => {
+  console.log("C");
+}, 0);
+```
+
+### Output
+
+```text
+A
+B
+C
+```
+
+The timers were scheduled in this order, so they normally execute in that order when they become eligible.
+
+---
+
+# 🔥🔥🔥 5. Microtask Created Inside a Macrotask
+
+This is **very important**.
+
+```js
+setTimeout(() => {
+  console.log("A");
+
+  Promise.resolve().then(() => {
+    console.log("B");
+  });
+}, 0);
+
+setTimeout(() => {
+  console.log("C");
+}, 0);
+```
+
+### Output
+
+```text
+A
+B
+C
+```
+
+Why?
+
+First macrotask:
+
+```text
+setTimeout 1
+     ↓
+A
+```
+
+Inside that macrotask, we create a Promise microtask:
+
+```text
+B
+```
+
+JavaScript processes the microtask before moving to the next macrotask.
+
+So:
+
+```text
+Macrotask 1
+    ↓
+A
+    ↓
+Microtask
+    ↓
+B
+    ↓
+Macrotask 2
+    ↓
+C
+```
+
+Final:
+
+```text
+A
+B
+C
+```
+
+### 🔥 Important Rule
+
+> **After a macrotask finishes, pending microtasks are processed before the next macrotask.**
+
+---
+
+# 🔥🔥🔥 6. Microtask Created Inside a Microtask
+
+Now look carefully:
+
+```js
+Promise.resolve().then(() => {
+  console.log("A");
+
+  Promise.resolve().then(() => {
+    console.log("B");
+  });
+});
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+```
+
+### Output
+
+```text
+A
+C
+B
+```
+
+This is a little tricky.
+
+Initially:
+
+```text
+Microtask Queue:
+
+1. First Promise → A
+2. Second Promise → C
+```
+
+First microtask runs:
+
+```text
+A
+```
+
+During `A`, another microtask is added:
+
+```text
+B
+```
+
+But `C` was already waiting.
+
+So the queue becomes:
+
+```text
+C
+B
+```
+
+Therefore:
+
+```text
+A
+C
+B
+```
+
+---
+
+# 🔥🔥🔥 7. Promise + `setTimeout()` + Nested Promise
+
+```js
+console.log("1");
+
+Promise.resolve().then(() => {
+  console.log("2");
+
+  Promise.resolve().then(() => {
+    console.log("3");
+  });
+});
+
+setTimeout(() => {
+  console.log("4");
+}, 0);
+
+console.log("5");
+```
+
+### Output
+
+```text
+1
+5
+2
+3
+4
+```
+
+Let's follow it.
+
+### Synchronous:
+
+```text
+1
+5
+```
+
+### Microtasks:
+
+First:
+
+```text
+2
+```
+
+While running `2`, another microtask is created:
+
+```text
+3
+```
+
+So:
+
+```text
+3
+```
+
+runs before the timer.
+
+### Macrotask:
+
+Finally:
+
+```text
+4
+```
+
+So:
+
+```text
+1
+5
+2
+3
+4
+```
+
+---
+
+# 🔥🔥🔥 8. Famous Interview Question
+
+Predict:
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("C");
+
+  setTimeout(() => {
+    console.log("D");
+  }, 0);
+});
+
+console.log("E");
+```
+
+### Output
+
+```text
+A
+E
+C
+B
+D
+```
+
+### Step-by-step
+
+Synchronous:
+
+```text
+A
+E
+```
+
+Microtask:
+
+```text
+C
+```
+
+While `C` runs, another timer is scheduled:
+
+```text
+D
+```
+
+But the first timer (`B`) was already scheduled before `D`.
+
+So macrotask order:
+
+```text
+B
+D
+```
+
+Final:
+
+```text
+A
+E
+C
+B
+D
+```
+
+---
+
+# 🔥🔥🔥 9. Microtasks Can Delay Macrotasks
+
+This is an important concept.
+
+```js
+setTimeout(() => {
+  console.log("Timeout");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("Promise 1");
+});
+
+Promise.resolve().then(() => {
+  console.log("Promise 2");
+});
+
+Promise.resolve().then(() => {
+  console.log("Promise 3");
+});
+```
+
+### Output
+
+```text
+Promise 1
+Promise 2
+Promise 3
+Timeout
+```
+
+The timer is ready, but JavaScript processes the microtask queue first.
+
+Think:
+
+```text
+Microtasks:
+Promise 1
+Promise 2
+Promise 3
+        ↓
+then timer
+        ↓
+Timeout
+```
+
+---
+
+# 🔥🔥🔥 10. `queueMicrotask()`
+
+`queueMicrotask()` directly adds a callback to the microtask queue.
+
+```js
+console.log("A");
+
+queueMicrotask(() => {
+  console.log("B");
+});
+
+setTimeout(() => {
+  console.log("C");
+}, 0);
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Same basic ordering:
+
+```text
+Synchronous
+    ↓
+Microtask
+    ↓
+Macrotask
+```
+
+---
+
+# 🔥🔥🔥 11. `queueMicrotask()` vs Promise
+
+Both are microtasks in the common case:
+
+```js
+console.log("A");
+
+queueMicrotask(() => {
+  console.log("B");
+});
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+
+console.log("D");
+```
+
+### Output
+
+```text
+A
+D
+B
+C
+```
+
+Why?
+
+They were added to the microtask queue in this order:
+
+```text
+B
+C
+```
+
+So after synchronous code:
+
+```text
+A
+D
+B
+C
+```
+
+---
+
+# 🔥🔥🔥 12. Very Important Mixed Question
+
+Predict:
+
+```js
+console.log("1");
+
+setTimeout(() => {
+  console.log("2");
+
+  Promise.resolve().then(() => {
+    console.log("3");
+  });
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("4");
+
+  setTimeout(() => {
+    console.log("5");
+  }, 0);
+});
+
+console.log("6");
+```
+
+### Output
+
+```text
+1
+6
+4
+2
+3
+5
+```
+
+Let's carefully track it.
+
+### Step 1 — Synchronous
+
+```text
+1
+6
+```
+
+### Step 2 — Microtask
+
+Promise callback:
+
+```text
+4
+```
+
+While `4` runs, it schedules:
+
+```text
+5
+```
+
+### Step 3 — First macrotask
+
+The first timer was already scheduled earlier:
+
+```text
+2
+```
+
+Inside `2`, another Promise microtask is created:
+
+```text
+3
+```
+
+That microtask runs immediately after the current macrotask:
+
+```text
+3
+```
+
+### Step 4 — Next macrotask
+
+Finally:
+
+```text
+5
+```
+
+So:
+
+```text
+1
+6
+4
+2
+3
+5
+```
+
+---
+
+# 🔥🔥🔥 13. The Most Important Pattern
+
+Memorize this:
+
+```js
+console.log("A");
+
+setTimeout(() => {
+  console.log("B");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("C");
+});
+
+console.log("D");
+```
+
+Output:
+
+```text
+A
+D
+C
+B
+```
+
+Because:
+
+```text
+A ───────────────┐
+D ───────────────┤ Synchronous
+                 ↓
+C ──────────────── Microtask
+                 ↓
+B ──────────────── Macrotask
+```
+
+---
+
+# 🔥🔥🔥 14. Another Famous Question
+
+```js
+setTimeout(() => {
+  console.log("A");
+}, 0);
+
+Promise.resolve().then(() => {
+  console.log("B");
+
+  Promise.resolve().then(() => {
+    console.log("C");
+  });
+});
+
+Promise.resolve().then(() => {
+  console.log("D");
+});
+```
+
+### Output
+
+```text
+B
+D
+C
+A
+```
+
+Why?
+
+Initial microtask queue:
+
+```text
+B
+D
+```
+
+First:
+
+```text
+B
+```
+
+During `B`, another microtask `C` is added.
+
+Queue becomes:
+
+```text
+D
+C
+```
+
+So:
+
+```text
+B
+D
+C
+```
+
+Only after all microtasks are finished:
+
+```text
+A
+```
+
+timer runs.
+
+Final:
+
+```text
+B
+D
+C
+A
+```
+
+---
+
+# 🧠 How to Solve These Questions
+
+Whenever you see a complicated output question, **don't try to guess the final output directly.**
+
+Make three boxes:
+
+```text
+┌─────────────────────┐
+│ 1. SYNCHRONOUS      │
+└─────────────────────┘
+
+┌─────────────────────┐
+│ 2. MICROTASKS       │
+│ Promise.then()      │
+│ queueMicrotask()    │
+└─────────────────────┘
+
+┌─────────────────────┐
+│ 3. MACROTASKS       │
+│ setTimeout()        │
+│ setInterval()       │
+└─────────────────────┘
+```
+
+Then process them in this order:
+
+```text
+Synchronous
+     ↓
+Microtasks
+     ↓
+Macrotask
+     ↓
+Microtasks again
+     ↓
+Next Macrotask
+     ↓
+Microtasks again
+     ↓
+...
+```
+
+### 🔥 This last part is VERY important.
+
+Don't think:
+
+```text
+All microtasks
+     ↓
+All macrotasks
+```
+
+❌ Not exactly.
+
+Instead think:
+
+```text
+Current synchronous code
+        ↓
+Drain microtasks
+        ↓
+Run ONE macrotask
+        ↓
+Drain microtasks
+        ↓
+Run next macrotask
+        ↓
+Drain microtasks
+        ↓
+...
+```
+
+---
+
+# 🔥🔥🔥 Final Mental Model
+
+```text
+              JavaScript
+                   │
+                   ↓
+          Synchronous Code
+                   │
+                   ↓
+          Microtask Queue
+       ┌────────────────────┐
+       │ Promise.then()     │
+       │ Promise.catch()    │
+       │ Promise.finally()  │
+       │ queueMicrotask()   │
+       └─────────┬──────────┘
+                 ↓
+          Macrotask Queue
+       ┌────────────────────┐
+       │ setTimeout()       │
+       │ setInterval()      │
+       └─────────┬──────────┘
+                 ↓
+          Microtasks again
+                 ↓
+          Next Macrotask
+                 ↓
+              ...
+```
+
+## 🧠 Golden Rule
+
+```text
+Synchronous
+    ↓
+Microtasks
+    ↓
+ONE Macrotask
+    ↓
+Microtasks
+    ↓
+ONE Macrotask
+    ↓
+Microtasks
+    ↓
+...
+```
+
+### 🔥🔥🔥 Interview Answer
+
+**Microtasks, such as Promise callbacks and `queueMicrotask()`, are processed after the current synchronous code finishes and before the event loop moves to the next macrotask. Macrotasks include callbacks such as `setTimeout()` and `setInterval()`. After each macrotask, the JavaScript runtime processes the pending microtasks before moving to the next macrotask.**
+
+### 🧠 One-Line Memory Trick
+
+```text
+Microtask → "Do this before the next task."
+
+Macrotask → "Run this as a later task."
+```
+
+<!-- ========================== -->

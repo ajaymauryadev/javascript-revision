@@ -5393,3 +5393,4040 @@ let + async callback → iteration-specific value
 **When `let` is used in a `for` loop, JavaScript creates a separate binding for the loop variable for each iteration. Therefore, callbacks such as `setTimeout()` or Promise callbacks can access the value from their specific iteration. This is why `for (let i = 0; i < 3; i++)` with delayed callbacks typically prints `0 1 2`, unlike `var`, which typically prints `3 3 3`.**
 
 <!-- =========================== -->
+
+Bilkul. Object references ke output questions mein sabse important concept hai:
+
+Objects ko variable mein directly store nahi kiya jata; variable object ka reference hold karta hai.
+
+Isliye agar do variables same object ko refer kar rahe hain, ek variable se object change karne par doosre variable se bhi changed value dikhegi.
+
+## 🔥🔥 Predict output involving object references
+
+**Objects in JavaScript are reference values. When an object is assigned to another variable, both variables can refer to the same object in memory.**
+
+Simple language:
+
+> **Object copy karne par hamesha naya object nahi banta. Kabhi-kabhi dono variables same object ko point kar rahe hote hain.**
+
+---
+
+# 🔥 1. Basic Object Reference
+
+```js
+const user1 = {
+  name: "Ajay",
+};
+
+const user2 = user1;
+
+user2.name = "Rahul";
+
+console.log(user1.name);
+console.log(user2.name);
+```
+
+### Output
+
+```text
+Rahul
+Rahul
+```
+
+Why?
+
+Ye line:
+
+```js
+const user2 = user1;
+```
+
+**new object nahi banati.**
+
+Instead:
+
+```text
+user1 ──────┐
+            ↓
+        { name: "Ajay" }
+            ↑
+user2 ──────┘
+```
+
+Both variables same object ko refer kar rahe hain.
+
+Then:
+
+```js
+user2.name = "Rahul";
+```
+
+same object change hota hai.
+
+So:
+
+```text
+user1.name → Rahul
+user2.name → Rahul
+```
+
+---
+
+# 🔥🔥 2. Primitive vs Object
+
+Ye difference bahut important hai.
+
+### Primitive
+
+```js
+let a = 10;
+let b = a;
+
+b = 20;
+
+console.log(a);
+console.log(b);
+```
+
+### Output
+
+```text
+10
+20
+```
+
+Because `b = a` ke baad `b` ko separate value milti hai.
+
+---
+
+### Object
+
+```js
+let a = {
+  value: 10,
+};
+
+let b = a;
+
+b.value = 20;
+
+console.log(a.value);
+console.log(b.value);
+```
+
+### Output
+
+```text
+20
+20
+```
+
+Because both variables same object ko refer karte hain.
+
+### 🧠 Remember
+
+```text
+Primitive
+→ value
+
+Object
+→ reference
+```
+
+---
+
+# 🔥🔥 3. Changing the Object
+
+```js
+const user = {
+  name: "Ajay",
+  age: 25,
+};
+
+const copy = user;
+
+copy.age = 30;
+
+console.log(user);
+```
+
+### Output
+
+```text
+{
+  name: "Ajay",
+  age: 30
+}
+```
+
+Why?
+
+`copy` koi independent copy nahi hai.
+
+```text
+user ────┐
+         ↓
+      Object
+         ↑
+copy ────┘
+```
+
+---
+
+# 🔥🔥 4. Changing the Variable vs Changing the Object
+
+This is a very important distinction.
+
+```js
+let user1 = {
+  name: "Ajay",
+};
+
+let user2 = user1;
+
+user2 = {
+  name: "Rahul",
+};
+
+console.log(user1.name);
+console.log(user2.name);
+```
+
+### Output
+
+```text
+Ajay
+Rahul
+```
+
+Why?
+
+Initially:
+
+```text
+user1 ────┐
+          ↓
+      { Ajay }
+          ↑
+user2 ────┘
+```
+
+Then:
+
+```js
+user2 = {
+  name: "Rahul",
+};
+```
+
+Now `user2` ko **new object** mil gaya.
+
+```text
+user1 ─────→ { name: "Ajay" }
+
+user2 ─────→ { name: "Rahul" }
+```
+
+So changing the variable's reference is different from changing the object.
+
+---
+
+# 🔥🔥🔥 5. Same Object or Different Object?
+
+```js
+const user1 = {
+  name: "Ajay",
+};
+
+const user2 = user1;
+
+console.log(user1 === user2);
+```
+
+### Output
+
+```text
+true
+```
+
+Because both refer to the same object.
+
+---
+
+Now:
+
+```js
+const user1 = {
+  name: "Ajay",
+};
+
+const user2 = {
+  name: "Ajay",
+};
+
+console.log(user1 === user2);
+```
+
+### Output
+
+```text
+false
+```
+
+Even though their contents are identical.
+
+Why?
+
+They are two different objects.
+
+```text
+user1 → Object A
+
+user2 → Object B
+```
+
+So:
+
+```text
+Object A !== Object B
+```
+
+---
+
+# 🔥🔥🔥 6. Same Content Doesn't Mean Same Object
+
+```js
+const a = {
+  value: 10,
+};
+
+const b = {
+  value: 10,
+};
+
+console.log(a === b);
+```
+
+### Output
+
+```text
+false
+```
+
+JavaScript compares object references, not their contents.
+
+```text
+a → Object 1
+
+b → Object 2
+```
+
+Even though:
+
+```text
+Object 1 = { value: 10 }
+Object 2 = { value: 10 }
+```
+
+they are different objects.
+
+---
+
+# 🔥🔥 7. Function Parameter with Object
+
+This is a common interview question.
+
+```js
+function changeUser(user) {
+  user.name = "Rahul";
+}
+
+const user = {
+  name: "Ajay",
+};
+
+changeUser(user);
+
+console.log(user.name);
+```
+
+### Output
+
+```text
+Rahul
+```
+
+Why?
+
+The function receives a reference to the same object.
+
+```text
+user outside
+     ↓
+   Object
+     ↑
+user inside function
+```
+
+So:
+
+```js
+user.name = "Rahul";
+```
+
+changes the original object.
+
+---
+
+# 🔥🔥 8. Reassigning Function Parameter
+
+Now look carefully:
+
+```js
+function changeUser(user) {
+  user = {
+    name: "Rahul",
+  };
+}
+
+const user = {
+  name: "Ajay",
+};
+
+changeUser(user);
+
+console.log(user.name);
+```
+
+### Output
+
+```text
+Ajay
+```
+
+Why?
+
+Inside the function:
+
+```js
+user = {
+  name: "Rahul",
+};
+```
+
+doesn't change the original object.
+
+It makes the **local parameter** point to a new object.
+
+Think:
+
+```text
+Before:
+
+outside user ───→ Object A
+                    Ajay
+
+
+Inside function:
+
+local user ──────→ Object A
+
+then:
+
+local user ──────→ Object B
+                    Rahul
+```
+
+The outside variable still points to Object A.
+
+So:
+
+```text
+Ajay
+```
+
+### 🧠 Important Difference
+
+```text
+user.name = "Rahul"
+→ changes object
+
+
+user = { name: "Rahul" }
+→ changes local reference
+```
+
+---
+
+# 🔥🔥🔥 9. Nested Object Reference
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const user2 = user1;
+
+user2.address.city = "Mumbai";
+
+console.log(user1.address.city);
+```
+
+### Output
+
+```text
+Mumbai
+```
+
+Because the nested object is also shared.
+
+```text
+user1 ─────┐
+           ↓
+        User Object
+           ↓
+       address Object
+           ↑
+user2 ─────┘
+```
+
+Both ultimately access the same `address` object.
+
+---
+
+# 🔥🔥🔥 10. Spread Operator and Object Reference
+
+Now:
+
+```js
+const user1 = {
+  name: "Ajay",
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.name = "Rahul";
+
+console.log(user1.name);
+console.log(user2.name);
+```
+
+### Output
+
+```text
+Ajay
+Rahul
+```
+
+Why?
+
+Spread creates a **new outer object**.
+
+```text
+user1 → Object A
+
+user2 → Object B
+```
+
+So changing `user2.name` doesn't affect `user1.name`.
+
+---
+
+# 🔥🔥🔥 11. But Spread Is Shallow Copy
+
+This is very important.
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.address.city = "Mumbai";
+
+console.log(user1.address.city);
+```
+
+### Output
+
+```text
+Mumbai
+```
+
+Why?
+
+The outer object is copied:
+
+```text
+user1 → Object A
+user2 → Object B
+```
+
+But the nested `address` object is still shared:
+
+```text
+user1.address ───┐
+                 ↓
+            Address Object
+                 ↑
+user2.address ───┘
+```
+
+So:
+
+```js
+user2.address.city = "Mumbai";
+```
+
+changes the shared nested object.
+
+### 🧠 Remember
+
+```text
+Spread
+→ shallow copy
+→ nested objects may still be shared
+```
+
+---
+
+# 🔥🔥🔥 12. Array References
+
+Same rule applies to arrays because arrays are objects.
+
+```js
+const arr1 = [1, 2, 3];
+
+const arr2 = arr1;
+
+arr2.push(4);
+
+console.log(arr1);
+```
+
+### Output
+
+```text
+[1, 2, 3, 4]
+```
+
+Both variables refer to the same array.
+
+```text
+arr1 ───┐
+        ↓
+     [1,2,3]
+        ↑
+arr2 ───┘
+```
+
+---
+
+# 🔥🔥 13. Array Copy with Spread
+
+```js
+const arr1 = [1, 2, 3];
+
+const arr2 = [...arr1];
+
+arr2.push(4);
+
+console.log(arr1);
+console.log(arr2);
+```
+
+### Output
+
+```text
+[1, 2, 3]
+[1, 2, 3, 4]
+```
+
+Because:
+
+```js
+[...arr1];
+```
+
+creates a new array.
+
+---
+
+# 🔥🔥🔥 14. Nested Array Reference
+
+Spread is still shallow:
+
+```js
+const arr1 = [[1, 2]];
+
+const arr2 = [...arr1];
+
+arr2[0].push(3);
+
+console.log(arr1);
+```
+
+### Output
+
+```text
+[[1, 2, 3]]
+```
+
+Why?
+
+The outer array is copied, but the inner array is still shared.
+
+```text
+arr1
+ ↓
+[ ─────→ Inner Array [1,2]
+]
+
+arr2
+ ↓
+[ ─────→ Same Inner Array [1,2]
+]
+```
+
+So:
+
+```js
+arr2[0].push(3);
+```
+
+also affects `arr1[0]`.
+
+---
+
+# 🔥🔥🔥 15. Object Reference + `const`
+
+A common confusion:
+
+```js
+const user = {
+  name: "Ajay",
+};
+
+user.name = "Rahul";
+
+console.log(user.name);
+```
+
+### Output
+
+```text
+Rahul
+```
+
+`const` does **not** make the object immutable.
+
+It means the variable cannot be reassigned to another object.
+
+This is allowed:
+
+```js
+user.name = "Rahul";
+```
+
+But this is not:
+
+```js
+user = {
+  name: "Rahul",
+};
+```
+
+The second one gives:
+
+```text
+TypeError
+```
+
+### 🧠 Remember
+
+```text
+const object
+→ object properties can change
+
+const object
+→ variable cannot point to another object
+```
+
+---
+
+# 🔥🔥🔥 16. Function Returns an Object Reference
+
+```js
+function createUser() {
+  return {
+    name: "Ajay",
+  };
+}
+
+const user1 = createUser();
+const user2 = createUser();
+
+console.log(user1 === user2);
+```
+
+### Output
+
+```text
+false
+```
+
+Why?
+
+Every function call creates a new object:
+
+```text
+createUser() → Object A
+createUser() → Object B
+```
+
+So:
+
+```text
+user1 → Object A
+user2 → Object B
+```
+
+Therefore:
+
+```text
+false
+```
+
+---
+
+# 🔥🔥🔥 17. Function Returning the Same Object
+
+Now compare:
+
+```js
+const user = {
+  name: "Ajay",
+};
+
+function getUser() {
+  return user;
+}
+
+const user1 = getUser();
+const user2 = getUser();
+
+console.log(user1 === user2);
+```
+
+### Output
+
+```text
+true
+```
+
+Both function calls return the same object:
+
+```text
+user
+ ↓
+Object
+ ↑
+user1
+ ↑
+user2
+```
+
+---
+
+# 🔥🔥🔥 18. Object Reference Inside a Closure
+
+```js
+function createUser() {
+  const user = {
+    name: "Ajay",
+  };
+
+  return function () {
+    console.log(user.name);
+  };
+}
+
+const fn = createUser();
+
+fn();
+```
+
+### Output
+
+```text
+Ajay
+```
+
+The closure keeps access to the same object.
+
+Think:
+
+```text
+createUser()
+     ↓
+user object
+     ↓
+inner function remembers user
+     ↓
+createUser finishes
+     ↓
+fn()
+     ↓
+Ajay
+```
+
+---
+
+# 🔥🔥🔥 19. Changing Object Through Closure
+
+```js
+function createUser() {
+  const user = {
+    name: "Ajay",
+  };
+
+  return {
+    changeName() {
+      user.name = "Rahul";
+    },
+
+    getName() {
+      return user.name;
+    },
+  };
+}
+
+const user = createUser();
+
+user.changeName();
+
+console.log(user.getName());
+```
+
+### Output
+
+```text
+Rahul
+```
+
+Both methods close over the same `user` object.
+
+```text
+changeName()
+      ↓
+same object
+      ↓
+name = Rahul
+
+getName()
+      ↓
+same object
+      ↓
+Rahul
+```
+
+---
+
+# 🔥🔥🔥 20. Famous Interview Question
+
+Predict:
+
+```js
+const a = {
+  value: 10,
+};
+
+const b = a;
+
+const c = {
+  value: 10,
+};
+
+b.value = 20;
+
+console.log(a.value);
+console.log(b.value);
+console.log(c.value);
+console.log(a === b);
+console.log(a === c);
+```
+
+### Output
+
+```text
+20
+20
+10
+true
+false
+```
+
+Why?
+
+```text
+a ───┐
+     ↓
+ Object A { value: 10 }
+     ↑
+b ───┘
+
+
+c ───→ Object B { value: 10 }
+```
+
+`b.value = 20` changes Object A.
+
+So:
+
+```text
+a.value → 20
+b.value → 20
+c.value → 10
+```
+
+And:
+
+```text
+a === b → true
+a === c → false
+```
+
+---
+
+# 🧠 How to Solve Object Reference Questions
+
+Whenever you see object assignment:
+
+```js
+const b = a;
+```
+
+ask:
+
+> **Did JavaScript create a new object?**
+
+Usually:
+
+```text
+No ❌
+```
+
+Both variables refer to the same object.
+
+---
+
+### If you see:
+
+```js
+const b = {
+  ...a,
+};
+```
+
+then:
+
+```text
+New outer object ✅
+```
+
+But remember:
+
+```text
+Nested objects → still shared
+```
+
+---
+
+### If you see:
+
+```js
+b.property = value;
+```
+
+then you're changing the object.
+
+---
+
+### If you see:
+
+```js
+b = anotherObject;
+```
+
+then you're changing what `b` refers to.
+
+The original object is not changed just because `b` changed its reference.
+
+---
+
+# 🔥🔥🔥 Golden Pattern
+
+### Same reference
+
+```js
+const a = { value: 10 };
+const b = a;
+
+b.value = 20;
+```
+
+```text
+a.value → 20
+b.value → 20
+```
+
+---
+
+### Different objects
+
+```js
+const a = { value: 10 };
+const b = { value: 10 };
+
+b.value = 20;
+```
+
+```text
+a.value → 10
+b.value → 20
+```
+
+---
+
+### Shallow copy
+
+```js
+const a = {
+  nested: {
+    value: 10,
+  },
+};
+
+const b = { ...a };
+
+b.nested.value = 20;
+```
+
+```text
+a.nested.value → 20
+b.nested.value → 20
+```
+
+---
+
+# 🧠 One-Line Memory Trick
+
+```text
+b = a
+→ same object
+
+
+b = { ...a }
+→ new outer object
+
+
+b.nested = ...
+→ nested reference may still be shared
+
+
+b = newObject
+→ b now points somewhere else
+```
+
+### 🔥🔥 Interview Answer
+
+**Objects are reference values in JavaScript. Assigning one object variable to another copies the reference, so both variables can point to the same object. Mutating the object through one reference is visible through the other. Creating a new object with spread or another copying technique creates a new outer object, but spread performs only a shallow copy, so nested objects can still share references.**
+
+<!-- =============================== -->
+
+Bilkul. Ye object references ke baad bahut important topic hai. Isme bas ek main idea pakad lo:
+
+Shallow copy outer object ko copy karta hai, but nested objects/arrays ke references copy hote hain.
+
+Isliye top-level change safe hota hai, lekin nested change original ko bhi affect kar sakta hai.
+
+## 🔥🔥 Predict output involving shallow copies
+
+**A shallow copy creates a new outer object or array, but nested objects and arrays are still shared by reference.**
+
+Simple language:
+
+> **Shallow copy = bahar se new object, andar ke nested objects same.**
+
+Common ways to create a shallow copy:
+
+```js
+const copy = { ...original };
+
+const copy = Object.assign({}, original);
+
+const copy = [...original];
+```
+
+For arrays:
+
+```js
+const copy = [...arr];
+```
+
+---
+
+# 🔥 1. Basic Shallow Copy
+
+```js
+const user1 = {
+  name: "Ajay",
+  age: 25,
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.name = "Rahul";
+
+console.log(user1.name);
+console.log(user2.name);
+```
+
+### Output
+
+```text
+Ajay
+Rahul
+```
+
+Why?
+
+Spread creates a **new outer object**.
+
+```text
+user1 → Object A
+
+user2 → Object B
+```
+
+So changing:
+
+```js
+user2.name = "Rahul";
+```
+
+doesn't affect `user1`.
+
+---
+
+# 🔥🔥 2. Shallow Copy with Nested Object
+
+Now the important part:
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.address.city = "Mumbai";
+
+console.log(user1.address.city);
+console.log(user2.address.city);
+```
+
+### Output
+
+```text
+Mumbai
+Mumbai
+```
+
+Why?
+
+Outer objects are different:
+
+```text
+user1 → Object A
+user2 → Object B
+```
+
+But `address` is still the **same nested object**:
+
+```text
+user1.address ───┐
+                 ↓
+          Address Object
+                 ↑
+user2.address ───┘
+```
+
+Therefore:
+
+```js
+user2.address.city = "Mumbai";
+```
+
+changes the same nested object.
+
+---
+
+# 🔥🔥🔥 3. Top-Level vs Nested Property
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.name = "Rahul";
+user2.address.city = "Mumbai";
+
+console.log(user1);
+```
+
+### Output
+
+```text
+{
+  name: "Ajay",
+  address: {
+    city: "Mumbai"
+  }
+}
+```
+
+Notice:
+
+```text
+name
+→ NOT changed
+
+address.city
+→ changed
+```
+
+Because:
+
+```text
+Top-level property
+→ copied
+
+Nested object
+→ reference shared
+```
+
+---
+
+# 🔥🔥 4. `===` with Shallow Copy
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const user2 = {
+  ...user1,
+};
+
+console.log(user1 === user2);
+console.log(user1.address === user2.address);
+```
+
+### Output
+
+```text
+false
+true
+```
+
+This is **very important**.
+
+Outer object:
+
+```text
+user1 !== user2
+```
+
+But nested object:
+
+```text
+user1.address === user2.address
+```
+
+because both point to the same nested object.
+
+---
+
+# 🔥🔥🔥 5. Shallow Copy with Array
+
+```js
+const arr1 = [1, 2, 3];
+
+const arr2 = [...arr1];
+
+arr2.push(4);
+
+console.log(arr1);
+console.log(arr2);
+```
+
+### Output
+
+```text
+[1, 2, 3]
+[1, 2, 3, 4]
+```
+
+Because:
+
+```js
+const arr2 = [...arr1];
+```
+
+creates a new array.
+
+```text
+arr1 → Array A
+
+arr2 → Array B
+```
+
+So `push()` only changes `arr2`.
+
+---
+
+# 🔥🔥🔥 6. Shallow Copy with Nested Array
+
+Now:
+
+```js
+const arr1 = [
+  [1, 2],
+  [3, 4],
+];
+
+const arr2 = [...arr1];
+
+arr2[0].push(5);
+
+console.log(arr1);
+console.log(arr2);
+```
+
+### Output
+
+```text
+[[1, 2, 5], [3, 4]]
+
+[[1, 2, 5], [3, 4]]
+```
+
+Why?
+
+Outer arrays are different:
+
+```text
+arr1 !== arr2
+```
+
+But the inner arrays are shared:
+
+```text
+arr1[0] === arr2[0]
+```
+
+So:
+
+```js
+arr2[0].push(5);
+```
+
+changes the shared inner array.
+
+---
+
+# 🔥🔥 7. Shallow Copy with `Object.assign()`
+
+`Object.assign()` also creates a shallow copy.
+
+```js
+const user1 = {
+  name: "Ajay",
+  age: 25,
+};
+
+const user2 = Object.assign({}, user1);
+
+user2.name = "Rahul";
+
+console.log(user1.name);
+console.log(user2.name);
+```
+
+### Output
+
+```text
+Ajay
+Rahul
+```
+
+Because a new outer object was created.
+
+---
+
+# 🔥🔥 8. `Object.assign()` with Nested Object
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const user2 = Object.assign({}, user1);
+
+user2.address.city = "Mumbai";
+
+console.log(user1.address.city);
+```
+
+### Output
+
+```text
+Mumbai
+```
+
+Same reason:
+
+```text
+Object.assign()
+→ shallow copy
+→ nested object reference is shared
+```
+
+---
+
+# 🔥🔥🔥 9. Spread Does NOT Deep Copy
+
+```js
+const user1 = {
+  name: "Ajay",
+  details: {
+    age: 25,
+  },
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.details.age = 30;
+
+console.log(user1.details.age);
+```
+
+### Output
+
+```text
+30
+```
+
+Some beginners think:
+
+```js
+{
+  ...user1
+}
+```
+
+means everything inside is copied.
+
+❌ Not exactly.
+
+It only copies the **first level**.
+
+```text
+user1
+ ↓
+Outer Object
+ ├── name → "Ajay"
+ └── details ──────┐
+                   ↓
+                Object
+```
+
+`user2` gets a new outer object, but `details` still points to the same object.
+
+---
+
+# 🔥🔥🔥 10. One Level vs Two Levels
+
+Look at this:
+
+```js
+const user1 = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+    location: {
+      country: "India",
+    },
+  },
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.name = "Rahul";
+user2.address.city = "Mumbai";
+user2.address.location.country = "USA";
+
+console.log(user1);
+```
+
+### Output
+
+```text
+{
+  name: "Ajay",
+  address: {
+    city: "Mumbai",
+    location: {
+      country: "USA"
+    }
+  }
+}
+```
+
+Why?
+
+`name` is a primitive top-level value:
+
+```text
+name
+→ copied
+```
+
+But:
+
+```text
+address
+→ shared reference
+
+address.location
+→ also shared reference
+```
+
+So nested changes affect the original.
+
+---
+
+# 🔥🔥🔥 11. Changing Top-Level Object Property
+
+```js
+const obj1 = {
+  user: {
+    name: "Ajay",
+  },
+  age: 25,
+};
+
+const obj2 = {
+  ...obj1,
+};
+
+obj2.age = 30;
+
+console.log(obj1.age);
+console.log(obj2.age);
+```
+
+### Output
+
+```text
+25
+30
+```
+
+`age` is a top-level property.
+
+So it was copied into the new outer object.
+
+---
+
+# 🔥🔥🔥 12. Changing Nested Property
+
+Same object:
+
+```js
+const obj1 = {
+  user: {
+    name: "Ajay",
+  },
+  age: 25,
+};
+
+const obj2 = {
+  ...obj1,
+};
+
+obj2.user.name = "Rahul";
+
+console.log(obj1.user.name);
+console.log(obj2.user.name);
+```
+
+### Output
+
+```text
+Rahul
+Rahul
+```
+
+Because:
+
+```text
+obj1.user === obj2.user
+```
+
+---
+
+# 🔥🔥🔥 13. Replacing the Nested Object
+
+This is a very important difference.
+
+```js
+const obj1 = {
+  user: {
+    name: "Ajay",
+  },
+};
+
+const obj2 = {
+  ...obj1,
+};
+
+obj2.user = {
+  name: "Rahul",
+};
+
+console.log(obj1.user.name);
+console.log(obj2.user.name);
+```
+
+### Output
+
+```text
+Ajay
+Rahul
+```
+
+Why?
+
+This time we are **replacing the nested reference**:
+
+```js
+obj2.user = {
+  name: "Rahul",
+};
+```
+
+We are not modifying the shared object.
+
+Before:
+
+```text
+obj1.user ───┐
+             ↓
+         User Object
+             ↑
+obj2.user ───┘
+```
+
+After:
+
+```text
+obj1.user ───→ Object A
+               Ajay
+
+obj2.user ───→ Object B
+               Rahul
+```
+
+So original stays unchanged.
+
+---
+
+# 🔥🔥🔥 14. Very Important Difference
+
+### Mutation
+
+```js
+obj2.user.name = "Rahul";
+```
+
+Output:
+
+```text
+obj1.user.name → Rahul
+```
+
+### Replacement
+
+```js
+obj2.user = {
+  name: "Rahul",
+};
+```
+
+Output:
+
+```text
+obj1.user.name → Ajay
+```
+
+### 🧠 Remember
+
+```text
+obj2.user.name = ...
+→ modifies shared object
+
+
+obj2.user = ...
+→ replaces obj2's reference
+```
+
+---
+
+# 🔥🔥🔥 15. Shallow Copy + Function
+
+```js
+const obj1 = {
+  value: 10,
+};
+
+const obj2 = {
+  ...obj1,
+};
+
+function change(obj) {
+  obj.value = 20;
+}
+
+change(obj2);
+
+console.log(obj1.value);
+console.log(obj2.value);
+```
+
+### Output
+
+```text
+10
+20
+```
+
+Why?
+
+`obj1` and `obj2` are different outer objects.
+
+```text
+obj1 → Object A
+
+obj2 → Object B
+```
+
+Changing `obj2.value` doesn't affect `obj1`.
+
+---
+
+# 🔥🔥🔥 16. Shallow Copy + Nested Function
+
+```js
+const obj1 = {
+  user: {
+    name: "Ajay",
+  },
+};
+
+const obj2 = {
+  ...obj1,
+};
+
+function change(obj) {
+  obj.user.name = "Rahul";
+}
+
+change(obj2);
+
+console.log(obj1.user.name);
+```
+
+### Output
+
+```text
+Rahul
+```
+
+Because:
+
+```text
+obj1.user === obj2.user
+```
+
+The nested object is shared.
+
+---
+
+# 🔥🔥🔥 17. Shallow Copy + `===`
+
+```js
+const a = {
+  x: 10,
+  nested: {
+    y: 20,
+  },
+};
+
+const b = { ...a };
+
+console.log(a === b);
+console.log(a.nested === b.nested);
+```
+
+### Output
+
+```text
+false
+true
+```
+
+This is probably the **most important shallow-copy comparison**.
+
+```text
+Outer:
+a !== b
+
+Nested:
+a.nested === b.nested
+```
+
+---
+
+# 🔥🔥🔥 18. Shallow Copy + Multiple Nested References
+
+```js
+const address = {
+  city: "Delhi",
+};
+
+const user1 = {
+  name: "Ajay",
+  address: address,
+};
+
+const user2 = {
+  ...user1,
+};
+
+user2.address.city = "Mumbai";
+
+console.log(address.city);
+console.log(user1.address.city);
+console.log(user2.address.city);
+```
+
+### Output
+
+```text
+Mumbai
+Mumbai
+Mumbai
+```
+
+Why?
+
+All three references point to the same address object:
+
+```text
+address ───────┐
+               ↓
+          Address Object
+               ↑
+user1.address ─┤
+               ↑
+user2.address ─┘
+```
+
+---
+
+# 🔥🔥🔥 19. Shallow Copy + Array of Objects
+
+Very common in real applications:
+
+```js
+const users1 = [{ name: "Ajay" }, { name: "Rahul" }];
+
+const users2 = [...users1];
+
+users2[0].name = "Amit";
+
+console.log(users1[0].name);
+console.log(users2[0].name);
+```
+
+### Output
+
+```text
+Amit
+Amit
+```
+
+Why?
+
+The outer array is copied:
+
+```text
+users1 !== users2
+```
+
+But the objects inside are shared:
+
+```text
+users1[0] === users2[0]
+```
+
+So:
+
+```js
+users2[0].name = "Amit";
+```
+
+changes the same object.
+
+---
+
+# 🔥🔥🔥 20. Array of Objects — Push vs Mutation
+
+This is a very useful interview question:
+
+```js
+const users1 = [{ name: "Ajay" }];
+
+const users2 = [...users1];
+
+users2.push({ name: "Rahul" });
+
+console.log(users1.length);
+console.log(users2.length);
+```
+
+### Output
+
+```text
+1
+2
+```
+
+Because `users2` is a new outer array.
+
+But:
+
+```js
+users2[0].name = "Amit";
+```
+
+would affect `users1[0]`.
+
+So:
+
+```text
+push()
+→ affects only new array
+
+nested object mutation
+→ can affect both arrays
+```
+
+---
+
+# 🔥🔥🔥 21. Famous Interview Question
+
+Predict:
+
+```js
+const original = {
+  name: "Ajay",
+  skills: ["JavaScript", "React"],
+};
+
+const copy = {
+  ...original,
+};
+
+copy.name = "Rahul";
+copy.skills.push("Node.js");
+
+console.log(original.name);
+console.log(original.skills);
+```
+
+### Output
+
+```text
+Ajay
+["JavaScript", "React", "Node.js"]
+```
+
+Why?
+
+`name`:
+
+```text
+top-level primitive
+→ copied
+→ independent
+```
+
+`skills`:
+
+```text
+nested array
+→ reference copied
+→ shared
+```
+
+So:
+
+```text
+original.name
+→ Ajay
+
+original.skills
+→ changed
+```
+
+---
+
+# 🧠 How to Solve Shallow Copy Questions
+
+Whenever you see:
+
+```js
+const copy = { ...original };
+```
+
+immediately draw:
+
+```text
+original → NEW outer object
+copy     → NEW outer object
+```
+
+Then inspect every property.
+
+### Primitive property
+
+```js
+name: "Ajay";
+age: 25;
+active: true;
+```
+
+Usually:
+
+```text
+Copied value
+→ independent
+```
+
+### Object/Array property
+
+```js
+address: {
+}
+skills: [];
+```
+
+Usually:
+
+```text
+Reference copied
+→ shared
+```
+
+---
+
+# 🔥🔥🔥 Golden Pattern
+
+```js
+const copy = {
+  ...original,
+};
+```
+
+means:
+
+```text
+┌──────────────────────────────┐
+│       NEW OUTER OBJECT       │
+│                              │
+│ name → copied                │
+│ age  → copied                │
+│                              │
+│ address ────────────┐        │
+│                     │        │
+└─────────────────────│────────┘
+                      ↓
+                SAME OBJECT
+```
+
+So:
+
+```text
+Top-level primitive
+→ independent
+
+Top-level object/array
+→ reference shared
+```
+
+---
+
+# 🧠 Shallow Copy vs Deep Copy
+
+### Shallow Copy
+
+```js
+const copy = { ...original };
+```
+
+```text
+Outer object → new
+Nested object → shared
+```
+
+### Deep Copy
+
+Conceptually:
+
+```text
+Outer object → new
+Nested object → new
+Nested nested object → new
+...
+```
+
+One modern option is:
+
+```js
+const copy = structuredClone(original);
+```
+
+For supported data types, this creates independent nested objects rather than sharing those references.
+
+---
+
+# 🔥🔥🔥 Final Memory Trick
+
+```text
+Shallow Copy
+     ↓
+New outside
+     ↓
+Same inside
+```
+
+Or simply:
+
+```text
+{ ...obj }
+   ↓
+Outer → NEW
+Inner → SAME reference
+```
+
+### 🔥🔥🔥 Interview Answer
+
+**A shallow copy creates a new outer object or array, but nested objects and arrays are still copied by reference. Therefore, changing a top-level property usually does not affect the original, while mutating a nested object or array can affect both the original and the copy.**
+
+<!-- ========================== -->
+
+# 12. Important Output-Based Questions ⭐⭐⭐
+
+## 1. 🔥🔥 Predict output involving `==` and `===`
+
+JavaScript mein `==` aur `===` dono comparison operators hain, but dono ka comparison karne ka tarika different hai.
+
+```text
+==  → value compare karta hai, zarurat padne par type convert karta hai
+
+=== → value + type dono compare karta hai
+```
+
+### 🔥 Basic Example
+
+```js
+console.log(5 == "5");
+console.log(5 === "5");
+```
+
+### Output
+
+```text
+true
+false
+```
+
+Why?
+
+`==`:
+
+```text
+5 == "5"
+ ↓
+"5" ko number mein convert kiya
+ ↓
+5 == 5
+ ↓
+true
+```
+
+`===`:
+
+```text
+5 === "5"
+ ↓
+number !== string
+ ↓
+false
+```
+
+### 🧠 Golden Rule
+
+```text
+==  → loose equality → type coercion ho sakti hai
+
+=== → strict equality → type conversion nahi hota
+```
+
+---
+
+# 🔥🔥 2. Predict output
+
+```js
+console.log(10 == 10);
+console.log(10 === 10);
+```
+
+### Output
+
+```text
+true
+true
+```
+
+Dono mein:
+
+```text
+value = 10
+type = number
+```
+
+So both are true.
+
+---
+
+# 🔥🔥 3. Predict output
+
+```js
+console.log(10 == "10");
+console.log(10 === "10");
+```
+
+### Output
+
+```text
+true
+false
+```
+
+Because:
+
+```text
+10       → number
+"10"     → string
+```
+
+`==` type conversion kar sakta hai.
+
+`===` nahi karta.
+
+---
+
+# 🔥🔥 4. Predict output involving booleans
+
+```js
+console.log(true == 1);
+console.log(true === 1);
+
+console.log(false == 0);
+console.log(false === 0);
+```
+
+### Output
+
+```text
+true
+false
+true
+false
+```
+
+Because with `==`:
+
+```text
+true  → 1
+false → 0
+```
+
+But `===` type bhi check karta hai.
+
+```text
+true === 1
+boolean !== number
+```
+
+So false.
+
+---
+
+# 🔥🔥 5. Predict output
+
+```js
+console.log(null == undefined);
+console.log(null === undefined);
+```
+
+### Output
+
+```text
+true
+false
+```
+
+This is a very important special case.
+
+```text
+null == undefined
+→ true
+```
+
+But:
+
+```text
+null === undefined
+→ false
+```
+
+because:
+
+```text
+null      → null
+undefined → undefined
+```
+
+They are different types/values.
+
+### 🧠 Remember
+
+```text
+null == undefined   → true
+null === undefined  → false
+```
+
+---
+
+# 🔥🔥 6. Predict output
+
+```js
+console.log(0 == false);
+console.log(0 === false);
+```
+
+### Output
+
+```text
+true
+false
+```
+
+With `==`:
+
+```text
+false → 0
+```
+
+So:
+
+```text
+0 == 0
+→ true
+```
+
+With `===`:
+
+```text
+number !== boolean
+→ false
+```
+
+---
+
+# 🔥🔥 7. Predict output involving objects
+
+```js
+const a = {};
+const b = {};
+
+console.log(a == b);
+console.log(a === b);
+```
+
+### Output
+
+```text
+false
+false
+```
+
+Why?
+
+Both are different objects.
+
+```text
+a → Object A
+
+b → Object B
+```
+
+Even if objects look exactly the same, they are different references.
+
+---
+
+# 🔥🔥 8. Same Object Reference
+
+```js
+const a = {};
+const b = a;
+
+console.log(a == b);
+console.log(a === b);
+```
+
+### Output
+
+```text
+true
+true
+```
+
+Because:
+
+```text
+a ───┐
+     ↓
+  Object
+     ↑
+b ───┘
+```
+
+Both refer to the same object.
+
+---
+
+# 🔥🔥🔥 9. `==` vs `===` — Interview Pattern
+
+```js
+console.log(1 == "1");
+console.log(1 === "1");
+
+console.log(0 == false);
+console.log(0 === false);
+
+console.log(null == undefined);
+console.log(null === undefined);
+```
+
+### Output
+
+```text
+true
+false
+
+true
+false
+
+true
+false
+```
+
+### 🧠 Easy Memory
+
+```text
+==  → "Can these values become equal?"
+
+=== → "Are value AND type already the same?"
+```
+
+---
+
+# 2. 🔥🔥 Predict output involving type coercion
+
+**Type coercion means JavaScript automatically converts one type into another when needed.**
+
+For example:
+
+```js
+console.log("5" + 2);
+```
+
+### Output
+
+```text
+52
+```
+
+Why?
+
+With `+`, if one side is a string, JavaScript commonly performs string concatenation:
+
+```text
+"5" + 2
+ ↓
+"5" + "2"
+ ↓
+"52"
+```
+
+---
+
+# 🔥🔥 10. String + Number
+
+```js
+console.log("10" + 5);
+```
+
+### Output
+
+```text
+105
+```
+
+Because:
+
+```text
+"10" + 5
+ ↓
+"10" + "5"
+ ↓
+"105"
+```
+
+---
+
+# 🔥🔥 11. String - Number
+
+Now:
+
+```js
+console.log("10" - 5);
+```
+
+### Output
+
+```text
+5
+```
+
+Why?
+
+`-` doesn't concatenate strings.
+
+JavaScript converts `"10"` to number:
+
+```text
+"10" - 5
+ ↓
+10 - 5
+ ↓
+5
+```
+
+### 🧠 Important
+
+```text
++ → string concatenation can happen
+
+- * / → numeric conversion commonly happens
+```
+
+---
+
+# 🔥🔥 12. Multiplication
+
+```js
+console.log("5" * 2);
+console.log("10" / 2);
+```
+
+### Output
+
+```text
+10
+5
+```
+
+Strings are converted to numbers.
+
+---
+
+# 🔥🔥 13. Boolean Coercion
+
+```js
+console.log(Number(true));
+console.log(Number(false));
+```
+
+### Output
+
+```text
+1
+0
+```
+
+So:
+
+```text
+true  → 1
+false → 0
+```
+
+---
+
+# 🔥🔥 14. String Conversion
+
+```js
+console.log(String(100));
+console.log(String(true));
+console.log(String(null));
+```
+
+### Output
+
+```text
+"100"
+"true"
+"null"
+```
+
+---
+
+# 🔥🔥🔥 15. Boolean Conversion
+
+```js
+console.log(Boolean(0));
+console.log(Boolean(1));
+console.log(Boolean(""));
+console.log(Boolean("hello"));
+```
+
+### Output
+
+```text
+false
+true
+false
+true
+```
+
+Important falsy values include:
+
+```text
+false
+0
+-0
+""
+null
+undefined
+NaN
+```
+
+Most other values are truthy.
+
+---
+
+# 🔥🔥🔥 16. Famous `+` Question
+
+```js
+console.log(1 + "2" + 3);
+```
+
+### Output
+
+```text
+123
+```
+
+Step-by-step:
+
+```text
+1 + "2"
+ ↓
+"12"
+
+"12" + 3
+ ↓
+"123"
+```
+
+---
+
+# 🔥🔥🔥 17. Another Famous Question
+
+```js
+console.log(1 + 2 + "3");
+```
+
+### Output
+
+```text
+33
+```
+
+Step-by-step:
+
+```text
+1 + 2
+ ↓
+3
+
+3 + "3"
+ ↓
+"33"
+```
+
+### 🧠 Order matters!
+
+```text
+1 + "2" + 3 → "123"
+
+1 + 2 + "3" → "33"
+```
+
+---
+
+# 🔥🔥🔥 18. `-` with Strings
+
+```js
+console.log("10" - "5");
+console.log("10" * "2");
+console.log("10" / "2");
+```
+
+### Output
+
+```text
+5
+20
+5
+```
+
+JavaScript converts the strings into numbers.
+
+---
+
+# 🔥🔥 19. Empty String
+
+```js
+console.log("" == 0);
+console.log("" === 0);
+```
+
+### Output
+
+```text
+true
+false
+```
+
+With `==`, the empty string can be converted to `0`.
+
+With `===`:
+
+```text
+string !== number
+```
+
+---
+
+# 🔥🔥🔥 20. `null` with Number
+
+```js
+console.log(null == 0);
+console.log(null === 0);
+```
+
+### Output
+
+```text
+false
+false
+```
+
+This is a common trap.
+
+Although:
+
+```text
+null == undefined → true
+```
+
+it does **not** mean:
+
+```text
+null == 0 → true
+```
+
+It is false.
+
+---
+
+# 🔥🔥🔥 21. `null` with String
+
+```js
+console.log(null == "null");
+console.log(null === "null");
+```
+
+### Output
+
+```text
+false
+false
+```
+
+`null` is not the string `"null"`.
+
+---
+
+# 🔥🔥🔥 22. `undefined` with 0
+
+```js
+console.log(undefined == 0);
+console.log(undefined === 0);
+```
+
+### Output
+
+```text
+false
+false
+```
+
+---
+
+# 🔥🔥🔥 23. `NaN`
+
+`NaN` means:
+
+> **Not-a-Number**
+
+It represents an invalid numeric result.
+
+```js
+console.log("hello" * 2);
+```
+
+### Output
+
+```text
+NaN
+```
+
+Because `"hello"` cannot be converted into a valid number.
+
+---
+
+# 🔥🔥🔥 24. `NaN === NaN`
+
+Very important:
+
+```js
+console.log(NaN === NaN);
+console.log(NaN == NaN);
+```
+
+### Output
+
+```text
+false
+false
+```
+
+`NaN` is not equal to itself.
+
+To check whether something is `NaN`, use:
+
+```js
+Number.isNaN(value);
+```
+
+Example:
+
+```js
+console.log(Number.isNaN(NaN));
+```
+
+Output:
+
+```text
+true
+```
+
+---
+
+# 🔥🔥🔥 25. `NaN` with Other Values
+
+```js
+console.log(NaN == 5);
+console.log(NaN === 5);
+console.log(NaN == "hello");
+```
+
+### Output
+
+```text
+false
+false
+false
+```
+
+Any equality comparison involving `NaN` is false.
+
+---
+
+# 🔥🔥🔥 26. `typeof null`
+
+```js
+console.log(typeof null);
+```
+
+### Output
+
+```text
+object
+```
+
+This is a **historical JavaScript behavior**.
+
+Even though `null` represents the intentional absence of a value,:
+
+```text
+typeof null
+→ "object"
+```
+
+### 🧠 Interview Trap
+
+```text
+typeof null → "object"
+```
+
+---
+
+# 🔥🔥 27. `typeof undefined`
+
+```js
+console.log(typeof undefined);
+```
+
+### Output
+
+```text
+undefined
+```
+
+So:
+
+```text
+typeof null
+→ "object"
+
+typeof undefined
+→ "undefined"
+```
+
+---
+
+# 🔥🔥🔥 28. `null`, `undefined`, and `NaN`
+
+```js
+console.log(null == undefined);
+console.log(null === undefined);
+
+console.log(NaN == NaN);
+console.log(NaN === NaN);
+```
+
+### Output
+
+```text
+true
+false
+
+false
+false
+```
+
+### 🧠 Remember
+
+```text
+null == undefined
+→ true
+
+null === undefined
+→ false
+
+NaN == NaN
+→ false
+
+NaN === NaN
+→ false
+```
+
+---
+
+# 🔥🔥 29. `isNaN()` vs `Number.isNaN()`
+
+```js
+console.log(isNaN("hello"));
+console.log(Number.isNaN("hello"));
+```
+
+### Output
+
+```text
+true
+false
+```
+
+Why?
+
+Global `isNaN()` performs coercion:
+
+```text
+"hello"
+ ↓
+NaN
+ ↓
+true
+```
+
+`Number.isNaN()` does not perform that coercion and checks whether the value is actually the number `NaN`.
+
+---
+
+# 🔥🔥🔥 30. `Number.isNaN()`
+
+```js
+console.log(Number.isNaN(NaN));
+console.log(Number.isNaN("hello"));
+console.log(Number.isNaN(10));
+```
+
+### Output
+
+```text
+true
+false
+false
+```
+
+---
+
+# 4. 🔥🔥 Predict output involving `map()`, `filter()`, and `reduce()`
+
+These three array methods are extremely important for interviews.
+
+```text
+map()
+→ transforms every element
+
+filter()
+→ keeps elements that satisfy a condition
+
+reduce()
+→ combines elements into one final value
+```
+
+---
+
+# 🔥🔥 31. Basic `map()`
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num) => {
+  return num * 2;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[2, 4, 6]
+```
+
+`map()` runs on every element:
+
+```text
+1 → 2
+2 → 4
+3 → 6
+```
+
+---
+
+# 🔥🔥 32. `map()` Without `return`
+
+Very important:
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num) => {
+  num * 2;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[undefined, undefined, undefined]
+```
+
+Why?
+
+The callback doesn't return anything.
+
+So:
+
+```text
+1 → undefined
+2 → undefined
+3 → undefined
+```
+
+---
+
+# 🔥🔥 33. Arrow Function Implicit Return
+
+Compare:
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num) => num * 2);
+
+console.log(result);
+```
+
+### Output
+
+```text
+[2, 4, 6]
+```
+
+Because:
+
+```js
+(num) => num * 2;
+```
+
+implicitly returns the result.
+
+---
+
+# 🔥🔥 34. Basic `filter()`
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+
+const result = numbers.filter((num) => {
+  return num > 2;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[3, 4, 5]
+```
+
+`filter()` keeps elements for which the callback returns `true`.
+
+```text
+1 > 2 → false
+2 > 2 → false
+3 > 2 → true
+4 > 2 → true
+5 > 2 → true
+```
+
+---
+
+# 🔥🔥 35. `filter()` Returns Boolean
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.filter((num) => {
+  return num % 2 === 0;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[2]
+```
+
+Because:
+
+```text
+1 → false
+2 → true
+3 → false
+```
+
+Only `2` survives.
+
+---
+
+# 🔥🔥 36. `filter()` Without Return
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.filter((num) => {
+  num > 1;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[]
+```
+
+Why?
+
+The callback returns `undefined`.
+
+`undefined` is falsy.
+
+So no elements pass the filter.
+
+---
+
+# 🔥🔥 37. Basic `reduce()`
+
+```js
+const numbers = [1, 2, 3, 4];
+
+const result = numbers.reduce((sum, num) => {
+  return sum + num;
+}, 0);
+
+console.log(result);
+```
+
+### Output
+
+```text
+10
+```
+
+Step-by-step:
+
+```text
+0 + 1 = 1
+1 + 2 = 3
+3 + 3 = 6
+6 + 4 = 10
+```
+
+Final:
+
+```text
+10
+```
+
+---
+
+# 🔥🔥🔥 38. `reduce()` Without Initial Value
+
+```js
+const numbers = [1, 2, 3, 4];
+
+const result = numbers.reduce((sum, num) => {
+  return sum + num;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+10
+```
+
+Without an initial value:
+
+```text
+First element → initial accumulator
+```
+
+So:
+
+```text
+sum = 1
+```
+
+Then:
+
+```text
+1 + 2 = 3
+3 + 3 = 6
+6 + 4 = 10
+```
+
+---
+
+# 🔥🔥🔥 39. `map()` + `filter()`
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+
+const result = numbers.filter((num) => num % 2 === 0).map((num) => num * 10);
+
+console.log(result);
+```
+
+### Output
+
+```text
+[20, 40]
+```
+
+First:
+
+```text
+filter()
+→ [2, 4]
+```
+
+Then:
+
+```text
+map()
+→ [20, 40]
+```
+
+Think:
+
+```text
+[1,2,3,4,5]
+       ↓
+filter even
+       ↓
+[2,4]
+       ↓
+map × 10
+       ↓
+[20,40]
+```
+
+---
+
+# 🔥🔥🔥 40. `filter()` + `reduce()`
+
+```js
+const numbers = [1, 2, 3, 4, 5];
+
+const result = numbers
+  .filter((num) => num > 2)
+  .reduce((sum, num) => sum + num, 0);
+
+console.log(result);
+```
+
+### Output
+
+```text
+12
+```
+
+First:
+
+```text
+filter()
+→ [3,4,5]
+```
+
+Then:
+
+```text
+reduce()
+→ 3 + 4 + 5
+→ 12
+```
+
+---
+
+# 🔥🔥🔥 41. `map()` + `reduce()`
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num) => num * 2).reduce((sum, num) => sum + num, 0);
+
+console.log(result);
+```
+
+### Output
+
+```text
+12
+```
+
+Step 1:
+
+```text
+map()
+→ [2,4,6]
+```
+
+Step 2:
+
+```text
+reduce()
+→ 2 + 4 + 6
+→ 12
+```
+
+---
+
+# 🔥🔥🔥 42. Important `map()` Output Question
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num, index) => {
+  return num + index;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[1, 3, 5]
+```
+
+Why?
+
+```text
+num = 1, index = 0 → 1 + 0 = 1
+
+num = 2, index = 1 → 2 + 1 = 3
+
+num = 3, index = 2 → 3 + 2 = 5
+```
+
+---
+
+# 🔥🔥🔥 43. `filter()` with Index
+
+```js
+const numbers = [10, 20, 30, 40];
+
+const result = numbers.filter((num, index) => {
+  return index % 2 === 0;
+});
+
+console.log(result);
+```
+
+### Output
+
+```text
+[10, 30]
+```
+
+Indexes:
+
+```text
+10 → index 0 → keep
+20 → index 1 → remove
+30 → index 2 → keep
+40 → index 3 → remove
+```
+
+---
+
+# 🔥🔥🔥 44. `reduce()` with Index
+
+```js
+const numbers = [10, 20, 30];
+
+const result = numbers.reduce((sum, num, index) => {
+  return sum + num + index;
+}, 0);
+
+console.log(result);
+```
+
+### Output
+
+```text
+63
+```
+
+Step-by-step:
+
+```text
+sum = 0
+
+0 + 10 + 0 = 10
+
+10 + 20 + 1 = 31
+
+31 + 30 + 2 = 63
+```
+
+Final:
+
+```text
+63
+```
+
+---
+
+# 🔥🔥🔥 45. `map()` Does Not Change Original Array
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num) => num * 2);
+
+console.log(numbers);
+console.log(result);
+```
+
+### Output
+
+```text
+[1, 2, 3]
+[2, 4, 6]
+```
+
+`map()` returns a new array.
+
+---
+
+# 🔥🔥 46. `filter()` Does Not Change Original Array
+
+```js
+const numbers = [1, 2, 3, 4];
+
+const result = numbers.filter((num) => num > 2);
+
+console.log(numbers);
+console.log(result);
+```
+
+### Output
+
+```text
+[1, 2, 3, 4]
+[3, 4]
+```
+
+---
+
+# 🔥🔥 47. `reduce()` Returns a Value
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.reduce((sum, num) => {
+  return sum + num;
+}, 0);
+
+console.log(typeof result);
+console.log(result);
+```
+
+### Output
+
+```text
+number
+6
+```
+
+Unlike `map()` and `filter()`, `reduce()` doesn't necessarily return an array.
+
+It can return:
+
+```text
+number
+string
+object
+array
+anything
+```
+
+depending on what you return as the accumulator.
+
+---
+
+# 🔥🔥🔥 48. `reduce()` Can Create an Object
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.reduce((obj, num) => {
+  obj[num] = num * 10;
+  return obj;
+}, {});
+
+console.log(result);
+```
+
+### Output
+
+```text
+{
+  1: 10,
+  2: 20,
+  3: 30
+}
+```
+
+This is one reason `reduce()` is powerful.
+
+---
+
+# 🔥🔥🔥 49. Famous Combined Question
+
+```js
+const numbers = [1, 2, 3, 4, 5, 6];
+
+const result = numbers
+  .filter((num) => num % 2 === 0)
+  .map((num) => num * 2)
+  .reduce((sum, num) => sum + num, 0);
+
+console.log(result);
+```
+
+### Output
+
+```text
+24
+```
+
+Step-by-step:
+
+### `filter()`
+
+```text
+[1,2,3,4,5,6]
+       ↓
+[2,4,6]
+```
+
+### `map()`
+
+```text
+[2,4,6]
+   ↓
+[4,8,12]
+```
+
+### `reduce()`
+
+```text
+4 + 8 + 12
+   ↓
+24
+```
+
+---
+
+# 🔥🔥🔥 50. Important Trap — `map()` vs `filter()`
+
+```js
+const numbers = [1, 2, 3];
+
+const result = numbers.map((num) => num > 1);
+
+console.log(result);
+```
+
+### Output
+
+```text
+[false, true, true]
+```
+
+`map()` doesn't remove anything.
+
+It transforms every element:
+
+```text
+1 → false
+2 → true
+3 → true
+```
+
+If you wanted only the matching values:
+
+```js
+const result = numbers.filter((num) => num > 1);
+```
+
+Output:
+
+```text
+[2, 3]
+```
+
+### 🧠 Remember
+
+```text
+map()
+→ same number of elements
+
+filter()
+→ same or fewer elements
+
+reduce()
+→ one final accumulated value (in typical use)
+```
+
+---
+
+# 🔥🔥🔥 51. `map()` + Object Reference
+
+```js
+const users = [{ name: "Ajay" }, { name: "Rahul" }];
+
+const result = users.map((user) => user);
+
+result[0].name = "Amit";
+
+console.log(users[0].name);
+```
+
+### Output
+
+```text
+Amit
+```
+
+Why?
+
+This:
+
+```js
+.map((user) => user)
+```
+
+does **not clone the objects**.
+
+It returns the same object references.
+
+```text
+users[0] === result[0]
+→ true
+```
+
+So changing `result[0]` changes the original object too.
+
+---
+
+# 🔥🔥🔥 52. `map()` with Object Spread
+
+Compare:
+
+```js
+const users = [{ name: "Ajay" }, { name: "Rahul" }];
+
+const result = users.map((user) => ({
+  ...user,
+}));
+
+result[0].name = "Amit";
+
+console.log(users[0].name);
+console.log(result[0].name);
+```
+
+### Output
+
+```text
+Ajay
+Amit
+```
+
+Because:
+
+```js
+{
+  ...user
+}
+```
+
+creates a new object for each element.
+
+---
+
+# 🧠 Final Memory Table
+
+```text
+map()
+→ transforms every element
+→ returns new array
+→ usually same length
+
+
+filter()
+→ keeps matching elements
+→ returns new array
+→ length can decrease
+
+
+reduce()
+→ combines elements
+→ returns accumulator/final result
+```
+
+---
+
+# 🔥🔥🔥 Final Output Rules to Remember
+
+### `==` vs `===`
+
+```text
+==  → type coercion can happen
+
+=== → type + value must match
+```
+
+### Type coercion
+
+```text
+"5" + 2 → "52"
+
+"5" - 2 → 3
+
+"5" * 2 → 10
+```
+
+### Special values
+
+```text
+null == undefined   → true
+
+null === undefined  → false
+
+NaN == NaN          → false
+
+NaN === NaN         → false
+
+typeof null         → "object"
+```
+
+### Array methods
+
+```text
+map()
+→ transform
+
+filter()
+→ select
+
+reduce()
+→ combine
+```
+
+### 🧠 One-Line Memory Trick
+
+```text
+map     → "Change every item"
+
+filter  → "Keep some items"
+
+reduce  → "Make one result"
+```
+
+### 🔥🔥🔥 Interview Answer
+
+**`==` allows type coercion while `===` performs strict equality without coercing the types. Type coercion means JavaScript automatically converts values between types when required. `null`, `undefined`, and `NaN` have special comparison behavior, especially `null == undefined` being true and `NaN` not being equal to itself. `map()` transforms every element, `filter()` keeps elements that satisfy a condition, and `reduce()` combines elements into an accumulated result.**
+
+<!-- ========================== -->

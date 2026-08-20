@@ -6139,3 +6139,4334 @@ Throttle
 ```
 
 <!-- =============================== -->
+
+# 24. 🔥🔥 Implement `Promise.all()`
+
+## What is `Promise.all()`?
+
+`Promise.all()` ka use tab hota hai jab humein **multiple Promises ko ek saath run karna ho** aur humein **sabke results chahiye**.
+
+Example:
+
+```js id="u6yq2x"
+const p1 = Promise.resolve("User");
+const p2 = Promise.resolve("Posts");
+const p3 = Promise.resolve("Comments");
+
+Promise.all([p1, p2, p3]).then((result) => {
+  console.log(result);
+});
+```
+
+Output:
+
+```text id="7r3k1m"
+["User", "Posts", "Comments"]
+```
+
+Simple meaning:
+
+```text id="8gq4wa"
+Promise 1 ──┐
+Promise 2 ──┼──→ Promise.all() → final array
+Promise 3 ──┘
+```
+
+`Promise.all()` waits for **all promises to fulfill**.
+
+---
+
+# 🔥🔥 Why do we need `Promise.all()`?
+
+Suppose humein 3 APIs call karni hain:
+
+```text id="x1v3f5"
+Get user
+Get posts
+Get comments
+```
+
+We could do:
+
+```js id="8o6t5h"
+const user = await getUser();
+const posts = await getPosts();
+const comments = await getComments();
+```
+
+But if these requests independent hain, then one request unnecessarily doosre ka wait kar sakti hai.
+
+Instead:
+
+```js id="2f7w9d"
+const [user, posts, comments] = await Promise.all([
+  getUser(),
+  getPosts(),
+  getComments(),
+]);
+```
+
+Now all three can run concurrently.
+
+Conceptually:
+
+```text id="w8h1k4"
+getUser()     ──────────────→ done
+getPosts()    ───────→ done
+getComments() ───────────→ done
+
+              ↓
+
+        Promise.all()
+              ↓
+       wait for all
+              ↓
+     [user, posts, comments]
+```
+
+---
+
+# 🔥🔥🔥 What does "Implement your own Promise.all()" mean?
+
+Interviewer bol raha hai:
+
+> "Built-in `Promise.all()` use mat karo. Khud ek function banao jo same basic behavior provide kare."
+
+We want:
+
+```js id="r4c6j2"
+myPromiseAll([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]).then(
+  (result) => {
+    console.log(result);
+  },
+);
+```
+
+Output:
+
+```text id="z2h7p9"
+[1, 2, 3]
+```
+
+---
+
+# 🔥 Step 1 — Understand the requirements
+
+Our custom `Promise.all()` ko mainly ye kaam karne hain:
+
+```text id="6j2n8q"
+1. Multiple values/promises accept karo.
+
+2. Sabko process karo.
+
+3. Sab resolve ho jaayein
+   → results return karo.
+
+4. Ek bhi reject ho
+   → immediately reject karo.
+
+5. Result ka order input ke same hona chahiye.
+```
+
+Last point **bahut important** hai.
+
+---
+
+# 🔥🔥🔥 Result order important hai
+
+Suppose:
+
+```js id="6f8q2r"
+const p1 = new Promise((resolve) => {
+  setTimeout(() => resolve("A"), 3000);
+});
+
+const p2 = new Promise((resolve) => {
+  setTimeout(() => resolve("B"), 1000);
+});
+
+const p3 = new Promise((resolve) => {
+  setTimeout(() => resolve("C"), 2000);
+});
+```
+
+Actual completion order:
+
+```text id="5g1m4d"
+B → C → A
+```
+
+But:
+
+```js id="j8v3k1"
+Promise.all([p1, p2, p3]);
+```
+
+should return:
+
+```text id="4q7w2m"
+["A", "B", "C"]
+```
+
+**Not:**
+
+```text id="e8x5n3"
+["B", "C", "A"]
+```
+
+So:
+
+```text id="k6p9r1"
+Completion order ≠ Result order
+```
+
+Result order must match input order.
+
+---
+
+# 🔥🔥🔥 Basic Implementation
+
+```js id="m4t7x2"
+function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let completed = 0;
+
+    if (promises.length === 0) {
+      resolve([]);
+      return;
+    }
+
+    promises.forEach((promise, index) => {
+      Promise.resolve(promise)
+        .then((value) => {
+          results[index] = value;
+          completed++;
+
+          if (completed === promises.length) {
+            resolve(results);
+          }
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  });
+}
+```
+
+Ye basic interview implementation hai.
+
+Ab isko **line by line** samjho.
+
+---
+
+# 🧠 Step 1 — Return a new Promise
+
+```js id="q5w8n2"
+return new Promise((resolve, reject) => {
+```
+
+Our `myPromiseAll()` ko khud ek Promise return karna hai.
+
+So:
+
+```text id="d3h6k9"
+myPromiseAll()
+      ↓
+returns Promise
+```
+
+Then caller:
+
+```js id="u1c7v4"
+myPromiseAll([...])
+  .then(...)
+  .catch(...);
+```
+
+kar sakta hai.
+
+---
+
+# 🧠 Step 2 — Results array
+
+```js id="r8m2y5"
+const results = [];
+```
+
+Isme hum final values store karenge.
+
+Suppose input:
+
+```text id="z9p3k7"
+[
+  Promise A,
+  Promise B,
+  Promise C
+]
+```
+
+Final result:
+
+```text id="c4x1n8"
+[
+  "A",
+  "B",
+  "C"
+]
+```
+
+---
+
+# 🧠 Step 3 — Counter
+
+```js id="w7k3m9"
+let completed = 0;
+```
+
+Ye track karega:
+
+> Kitne Promises successfully complete ho chuke hain?
+
+Initially:
+
+```text id="s6v2j4"
+completed = 0
+```
+
+One Promise resolve:
+
+```text id="a9q5t1"
+completed = 1
+```
+
+Second:
+
+```text id="k3m8p6"
+completed = 2
+```
+
+Third:
+
+```text id="r4x7z2"
+completed = 3
+```
+
+Jab:
+
+```text id="n8c2w5"
+completed === promises.length
+```
+
+then all promises complete ho gaye.
+
+---
+
+# 🧠 Step 4 — Empty array
+
+```js id="p7h4x9"
+if (promises.length === 0) {
+  resolve([]);
+  return;
+}
+```
+
+Native:
+
+```js id="y2m6k8"
+Promise.all([]);
+```
+
+eventually fulfills with:
+
+```text id="c5r9v1"
+[]
+```
+
+So hum bhi:
+
+```text id="a1z4q7"
+[]
+```
+
+return karte hain.
+
+---
+
+# 🧠 Step 5 — Process every Promise
+
+```js id="k8p2m5"
+promises.forEach((promise, index) => {
+```
+
+Suppose:
+
+```text id="s3v7x1"
+index = 0 → Promise A
+
+index = 1 → Promise B
+
+index = 2 → Promise C
+```
+
+---
+
+# 🧠 Step 6 — `Promise.resolve()`
+
+```js id="u4n8c2"
+Promise.resolve(promise);
+```
+
+Ye important hai.
+
+It allows our function to handle both:
+
+```text id="q9m3w7"
+Promise
+```
+
+and normal values:
+
+```text id="d5x1k8"
+10
+"Hello"
+true
+```
+
+For example:
+
+```js id="e7p2v9"
+myPromiseAll([Promise.resolve(10), 20, Promise.resolve(30)]);
+```
+
+should work.
+
+`Promise.resolve(20)` effectively makes the normal value behave like a fulfilled Promise.
+
+---
+
+# 🧠 Step 7 — When Promise resolves
+
+```js id="z3k8m1"
+.then(value => {
+```
+
+Suppose:
+
+```text id="h6q2r9"
+Promise B → "B"
+```
+
+Then:
+
+```text id="m7v4c1"
+value = "B"
+```
+
+---
+
+# 🔥🔥🔥 Step 8 — Store result at the correct index
+
+This is perhaps the **most important line**:
+
+```js id="n2x7p5"
+results[index] = value;
+```
+
+Suppose:
+
+```text id="k8f3w6"
+Promise A → index 0
+Promise B → index 1
+Promise C → index 2
+```
+
+Even if Promise B completes first:
+
+```text id="v1m6q9"
+results[1] = "B";
+```
+
+So:
+
+```text id="j4x8r2"
+[empty, "B"]
+```
+
+Then C:
+
+```text id="p7n3k5"
+[empty, "B", "C"]
+```
+
+Then A:
+
+```text id="q9w2m6"
+["A", "B", "C"]
+```
+
+That's how we preserve input order.
+
+---
+
+# 🔥🔥🔥 Very Important
+
+Suppose completion order is:
+
+```text id="d8v2p5"
+B
+C
+A
+```
+
+Our results array still becomes:
+
+```text id="x4m7k1"
+results[1] = "B"
+results[2] = "C"
+results[0] = "A"
+```
+
+Final:
+
+```text id="n6q3w8"
+["A", "B", "C"]
+```
+
+So remember:
+
+```text id="r1p5z9"
+Store using index.
+```
+
+---
+
+# 🧠 Step 9 — Increase counter
+
+```js id="v7m2k4"
+completed++;
+```
+
+Every successful Promise ke baad:
+
+```text id="h8q3n6"
+completed++
+```
+
+Example:
+
+```text id="c1x7m9"
+0 → 1
+1 → 2
+2 → 3
+```
+
+---
+
+# 🧠 Step 10 — Check if everything completed
+
+```js id="f4z8p2"
+if (completed === promises.length) {
+  resolve(results);
+}
+```
+
+Suppose:
+
+```text id="k3m7x1"
+promises.length = 3
+```
+
+When:
+
+```text id="b8q2v5"
+completed = 3
+```
+
+we know:
+
+> All promises successfully resolved.
+
+So:
+
+```js id="y6n4r9"
+resolve(results);
+```
+
+returns:
+
+```text id="m2p7c8"
+["A", "B", "C"]
+```
+
+---
+
+# 🔥🔥🔥 Step 11 — What if one Promise rejects?
+
+This is extremely important.
+
+Suppose:
+
+```js id="q8m4x1"
+const p1 = Promise.resolve("A");
+
+const p2 = Promise.reject("Something went wrong");
+
+const p3 = Promise.resolve("C");
+```
+
+Then:
+
+```js id="t6k2v9"
+myPromiseAll([p1, p2, p3]);
+```
+
+should reject.
+
+We handle that with:
+
+```js id="n7c3p5"
+.catch(error => {
+  reject(error);
+});
+```
+
+So:
+
+```text id="a2m8x6"
+p1 → resolve
+
+p2 → reject
+       ↓
+   reject(error)
+
+p3 → may still complete,
+     but final Promise is already rejected.
+```
+
+---
+
+# 🔥🔥🔥 Promise.all Rule
+
+Remember this:
+
+```text id="f7k3n9"
+ALL must succeed.
+```
+
+If:
+
+```text id="w2q8m4"
+Promise 1 → success
+Promise 2 → success
+Promise 3 → success
+```
+
+Result:
+
+```text id="s5v1x7"
+resolve([...])
+```
+
+But:
+
+```text id="k8m3q2"
+Promise 1 → success
+Promise 2 → ERROR
+Promise 3 → success
+```
+
+Result:
+
+```text id="d4n7p1"
+reject(error)
+```
+
+Even one failure is enough.
+
+---
+
+# 🔥🔥🔥 Complete Example
+
+```js id="z8m4q2"
+function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let completed = 0;
+
+    if (promises.length === 0) {
+      resolve([]);
+      return;
+    }
+
+    promises.forEach((promise, index) => {
+      Promise.resolve(promise)
+        .then((value) => {
+          results[index] = value;
+          completed++;
+
+          if (completed === promises.length) {
+            resolve(results);
+          }
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  });
+}
+```
+
+Test:
+
+```js id="p5x7n3"
+const p1 = Promise.resolve("A");
+const p2 = Promise.resolve("B");
+const p3 = Promise.resolve("C");
+
+myPromiseAll([p1, p2, p3])
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+```
+
+Output:
+
+```text id="a3k8m6"
+["A", "B", "C"]
+```
+
+---
+
+# 🔥🔥🔥 Test with different completion times
+
+```js id="v2n7q4"
+const p1 = new Promise((resolve) => {
+  setTimeout(() => resolve("A"), 3000);
+});
+
+const p2 = new Promise((resolve) => {
+  setTimeout(() => resolve("B"), 1000);
+});
+
+const p3 = new Promise((resolve) => {
+  setTimeout(() => resolve("C"), 2000);
+});
+
+myPromiseAll([p1, p2, p3]).then((result) => {
+  console.log(result);
+});
+```
+
+Completion:
+
+```text id="m9x3p7"
+B → 1 second
+
+C → 2 seconds
+
+A → 3 seconds
+```
+
+But output:
+
+```text id="q4k8n2"
+["A", "B", "C"]
+```
+
+Again:
+
+```text id="f1z6m3"
+completion order
+≠
+result order
+```
+
+---
+
+# 🔥🔥🔥 Why don't we simply `push()`?
+
+You might think:
+
+```js id="t3n8q5"
+results.push(value);
+```
+
+But that would be wrong.
+
+Because completion order may be:
+
+```text id="b7m2x9"
+B
+C
+A
+```
+
+Then:
+
+```text id="h4q8v1"
+results = ["B", "C", "A"]
+```
+
+But `Promise.all()` requires:
+
+```text id="z6p3m8"
+["A", "B", "C"]
+```
+
+That's why:
+
+```js id="r5n7k2"
+results[index] = value;
+```
+
+is essential.
+
+---
+
+# 🔥🔥🔥 `Promise.all()` with normal values
+
+Native `Promise.all()` can accept values too.
+
+Example:
+
+```js id="x8m2q4"
+Promise.all([10, 20, Promise.resolve(30)]).then((result) => {
+  console.log(result);
+});
+```
+
+Output:
+
+```text id="v5k9n3"
+[10, 20, 30]
+```
+
+Our:
+
+```js id="p7m4x8"
+Promise.resolve(promise);
+```
+
+helps us support this.
+
+---
+
+# 🔥🔥🔥 Important Interview Question
+
+### Does `Promise.all()` execute promises one after another?
+
+No.
+
+The Promises are generally **started when their promise-producing functions are called**, before being passed into `Promise.all()`.
+
+Example:
+
+```js id="q3n8m5"
+const p1 = fetch("/users");
+const p2 = fetch("/posts");
+const p3 = fetch("/comments");
+
+const result = await Promise.all([p1, p2, p3]);
+```
+
+The requests can already be in progress concurrently.
+
+`Promise.all()` mainly coordinates their completion.
+
+Think:
+
+```text id="c7m2x9"
+start all
+   ↓
+wait for all
+   ↓
+collect results
+```
+
+---
+
+# 🔥🔥🔥 `Promise.all()` vs `Promise.allSettled()`
+
+This is a common interview follow-up.
+
+### `Promise.all()`
+
+```text id="w4n8q2"
+One rejects
+     ↓
+whole Promise rejects
+```
+
+### `Promise.allSettled()`
+
+```text id="p6x3m7"
+One rejects
+     ↓
+still waits for everything
+     ↓
+returns status of every Promise
+```
+
+Example:
+
+```text id="z8q4m1"
+Promise.all()
+
+A ✓
+B ✗
+C ✓
+
+→ reject
+```
+
+Whereas:
+
+```text id="k2v7n5"
+Promise.allSettled()
+
+A ✓
+B ✗
+C ✓
+
+→ [
+    { status: "fulfilled", ... },
+    { status: "rejected", ... },
+    { status: "fulfilled", ... }
+  ]
+```
+
+---
+
+# 🔥🔥🔥 `Promise.all()` vs `Promise.race()`
+
+Another common follow-up.
+
+### `Promise.all()`
+
+Waits for:
+
+```text id="f5m8q3"
+ALL
+```
+
+### `Promise.race()`
+
+Waits for:
+
+```text id="j2n7x4"
+FIRST SETTLED
+```
+
+Example:
+
+```text id="s8q3m6"
+A → 3 seconds
+B → 1 second
+C → 2 seconds
+```
+
+`Promise.all()`:
+
+```text id="w5p9k2"
+wait → 3 seconds
+```
+
+`Promise.race()`:
+
+```text id="d4x8m1"
+B → 1 second
+```
+
+---
+
+# 🔥🔥🔥 Common Tricky Question
+
+What is the output?
+
+```js id="m7q3v9"
+myPromiseAll([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]).then(
+  (result) => {
+    console.log(result);
+  },
+);
+```
+
+Answer:
+
+```text id="c5n8x2"
+[1, 2, 3]
+```
+
+---
+
+# 🔥🔥🔥 Tricky Question
+
+What happens here?
+
+```js id="z4p7m2"
+myPromiseAll([Promise.resolve(1), Promise.reject("Error"), Promise.resolve(3)])
+  .then((result) => {
+    console.log(result);
+  })
+  .catch((error) => {
+    console.log(error);
+  });
+```
+
+Output:
+
+```text id="q8n3v6"
+Error
+```
+
+Because one Promise rejected.
+
+---
+
+# 🔥🔥🔥 Tricky Question — Order
+
+```js id="x2m8q4"
+const p1 = new Promise((resolve) => {
+  setTimeout(() => resolve(1), 3000);
+});
+
+const p2 = new Promise((resolve) => {
+  setTimeout(() => resolve(2), 1000);
+});
+
+const p3 = new Promise((resolve) => {
+  setTimeout(() => resolve(3), 2000);
+});
+```
+
+Completion:
+
+```text id="n6v3p9"
+2
+3
+1
+```
+
+But:
+
+```js id="r7m2x5"
+myPromiseAll([p1, p2, p3]);
+```
+
+returns:
+
+```text id="h4q8n1"
+[1, 2, 3]
+```
+
+Because results are stored using:
+
+```js id="c9m5v7"
+results[index] = value;
+```
+
+---
+
+# 🔥🔥🔥 The Core Algorithm
+
+If you forget the code during an interview, remember these 5 steps:
+
+```text id="k3p8w2"
+1. Create a new Promise.
+
+2. Create results = [].
+
+3. Keep a completed counter.
+
+4. For each Promise:
+      → resolve it
+      → store result at its original index
+      → increase counter
+
+5. When completed === total:
+      → resolve(results)
+
+6. If any Promise rejects:
+      → reject(error)
+```
+
+That's the whole algorithm.
+
+---
+
+# 🔥🔥🔥 Final Interview Implementation
+
+```js id="m8q4x7"
+function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = [];
+    let completed = 0;
+
+    if (promises.length === 0) {
+      resolve([]);
+      return;
+    }
+
+    promises.forEach((promise, index) => {
+      Promise.resolve(promise)
+        .then((value) => {
+          results[index] = value;
+          completed++;
+
+          if (completed === promises.length) {
+            resolve(results);
+          }
+        })
+        .catch((error) => {
+          reject(error);
+        });
+    });
+  });
+}
+```
+
+Test:
+
+```js id="q5m9x3"
+myPromiseAll([
+  Promise.resolve("A"),
+  Promise.resolve("B"),
+  Promise.resolve("C"),
+]).then((result) => {
+  console.log(result);
+});
+```
+
+Output:
+
+```text id="w2n7k4"
+["A", "B", "C"]
+```
+
+---
+
+# 🧠 FINAL CHEAT SHEET
+
+```text id="x8m3q6"
+Promise.all()
+
+→ takes multiple Promises/values
+→ waits for all to fulfill
+→ returns one Promise
+→ preserves input order
+→ one rejection → entire result rejects
+```
+
+### Most important variables:
+
+```text id="r4p8n2"
+results
+→ stores final values
+
+completed
+→ counts successful Promises
+
+index
+→ preserves input order
+```
+
+### Most important line:
+
+```js id="j6q2m8"
+results[index] = value;
+```
+
+### Most important rule:
+
+```text id="f3n7x5"
+ALL must succeed.
+```
+
+### Memory trick:
+
+```text id="m8q4v2"
+Promise.all()
+→ "Sab successful honge tab result do."
+```
+
+And compare:
+
+```text id="z5p2k7"
+Promise.all()
+→ wait for ALL
+
+Promise.race()
+→ wait for FIRST
+
+Promise.allSettled()
+→ wait for ALL, even if some fail
+```
+
+<!-- ========================= -->
+
+Bilkul. Ye 3 questions interview mein thode scary lag sakte hain, especially deep clone aur curry, but hum inhe basic se step-by-step samjhenge.
+
+Sabse pehle ek simple idea:
+
+Deep Clone
+→ completely independent copy
+
+Memoization
+→ same input ka result dobara calculate mat karo
+
+Currying
+→ ek function ke multiple arguments ko one-by-one functions mein convert karo
+
+# 25. 🔥🔥 Implement a Deep Clone
+
+## What is a Deep Clone?
+
+Deep clone ka matlab hai:
+
+> Kisi object ki **completely independent copy** banana, including uske nested objects aur arrays.
+
+Example:
+
+```js
+const original = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+```
+
+Agar hum deep clone banate hain:
+
+```js
+const copy = deepClone(original);
+```
+
+Toh:
+
+```text
+original
+   ↓
+completely independent
+   ↓
+copy
+```
+
+Agar `copy` ko change karenge:
+
+```js
+copy.address.city = "Mumbai";
+```
+
+Toh `original` change nahi hona chahiye.
+
+---
+
+# 🔥🔥 Why is normal assignment NOT a clone?
+
+Suppose:
+
+```js
+const user = {
+  name: "Ajay",
+};
+
+const copy = user;
+
+copy.name = "Rahul";
+
+console.log(user.name);
+```
+
+Output:
+
+```text
+Rahul
+```
+
+Why?
+
+Because:
+
+```js
+const copy = user;
+```
+
+new object nahi banata.
+
+Dono same object ko point kar rahe hain:
+
+```text
+user ──────┐
+           ↓
+       { name: "Ajay" }
+           ↑
+copy ──────┘
+```
+
+So:
+
+```text
+copy change
+    ↓
+same object change
+    ↓
+user also changes
+```
+
+---
+
+# 🔥🔥 Shallow Copy vs Deep Clone
+
+Ye difference bahut important hai.
+
+## Shallow Copy
+
+Example:
+
+```js
+const original = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+
+const copy = {
+  ...original,
+};
+```
+
+Outer object naya hai.
+
+But nested object:
+
+```text
+original.address
+      ↓
+same object
+      ↑
+copy.address
+```
+
+So:
+
+```js
+copy.address.city = "Mumbai";
+
+console.log(original.address.city);
+```
+
+Output:
+
+```text
+Mumbai
+```
+
+Because nested object share ho raha hai.
+
+---
+
+# 🔥🔥 Deep Clone
+
+Deep clone mein nested object bhi copy hota hai:
+
+```text
+original
+  ↓
+new outer object
+  ↓
+new nested object
+  ↓
+new nested array
+  ↓
+new deeper object
+```
+
+So:
+
+```text
+original.address
+      ↓
+different object
+      ↑
+copy.address
+```
+
+Now changing `copy.address` does not affect `original.address`.
+
+---
+
+# 🔥🔥🔥 Implement Your Own Deep Clone
+
+Basic interview implementation:
+
+```js
+function deepClone(value) {
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => deepClone(item));
+  }
+
+  const clonedObject = {};
+
+  for (const key in value) {
+    clonedObject[key] = deepClone(value[key]);
+  }
+
+  return clonedObject;
+}
+```
+
+Ab isko slowly samjhte hain.
+
+---
+
+# 🧠 Step 1 — Primitive values
+
+```js
+if (value === null || typeof value !== "object") {
+  return value;
+}
+```
+
+Primitive values:
+
+```text
+string
+number
+boolean
+undefined
+bigint
+symbol
+```
+
+inhe clone karne ke liye kuch special nahi karna.
+
+Example:
+
+```js
+deepClone("Ajay");
+```
+
+returns:
+
+```text
+"Ajay"
+```
+
+Similarly:
+
+```js
+deepClone(25);
+```
+
+returns:
+
+```text
+25
+```
+
+---
+
+# 🧠 Step 2 — Why check `null`?
+
+Because JavaScript mein:
+
+```js
+typeof null;
+```
+
+returns:
+
+```text
+"object"
+```
+
+So sirf:
+
+```js
+typeof value !== "object";
+```
+
+enough nahi hai.
+
+Isliye:
+
+```js
+value === null;
+```
+
+ko separately check karte hain.
+
+---
+
+# 🧠 Step 3 — Array check
+
+```js
+if (Array.isArray(value)) {
+  return value.map((item) => deepClone(item));
+}
+```
+
+Array bhi technically object hota hai.
+
+Example:
+
+```js
+const numbers = [1, 2, 3];
+```
+
+We create a new array:
+
+```text
+[1, 2, 3]
+```
+
+But nested values ko bhi recursively clone karte hain.
+
+---
+
+# 🧠 What does recursion mean here?
+
+Suppose:
+
+```js
+const user = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+};
+```
+
+When we reach:
+
+```js
+address;
+```
+
+we call:
+
+```js
+deepClone(address);
+```
+
+Then inside `address`:
+
+```text
+city → "Delhi"
+```
+
+is primitive, so simply return it.
+
+So:
+
+```text
+deepClone(user)
+      ↓
+deepClone(address)
+      ↓
+deepClone("Delhi")
+      ↓
+"Delhi"
+```
+
+This is recursion.
+
+---
+
+# 🔥🔥🔥 Step 4 — Clone Object
+
+```js
+const clonedObject = {};
+```
+
+We create a completely new object.
+
+Then:
+
+```js
+for (const key in value) {
+  clonedObject[key] = deepClone(value[key]);
+}
+```
+
+For:
+
+```js
+const user = {
+  name: "Ajay",
+  age: 25,
+};
+```
+
+it effectively does:
+
+```text
+clonedObject.name = deepClone("Ajay");
+
+clonedObject.age = deepClone(25);
+```
+
+Result:
+
+```js
+{
+  name: "Ajay",
+  age: 25
+}
+```
+
+---
+
+# 🔥🔥🔥 Full Example
+
+```js
+function deepClone(value) {
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => deepClone(item));
+  }
+
+  const clonedObject = {};
+
+  for (const key in value) {
+    clonedObject[key] = deepClone(value[key]);
+  }
+
+  return clonedObject;
+}
+
+const original = {
+  name: "Ajay",
+  address: {
+    city: "Delhi",
+  },
+  skills: ["JavaScript", "React"],
+};
+
+const copy = deepClone(original);
+
+copy.address.city = "Mumbai";
+copy.skills.push("Node.js");
+
+console.log(original);
+console.log(copy);
+```
+
+Original remains:
+
+```text
+{
+  name: "Ajay",
+  address: {
+    city: "Delhi"
+  },
+  skills: ["JavaScript", "React"]
+}
+```
+
+Copy becomes:
+
+```text
+{
+  name: "Ajay",
+  address: {
+    city: "Mumbai"
+  },
+  skills: ["JavaScript", "React", "Node.js"]
+}
+```
+
+---
+
+# 🔥🔥 Important Interview Point
+
+This basic implementation is good for understanding the concept, but it is **not a complete replacement for native cloning utilities**.
+
+Real-world objects can contain:
+
+```text
+Date
+RegExp
+Map
+Set
+Function
+Symbol properties
+Circular references
+Class instances
+```
+
+For example:
+
+```js
+const obj = {
+  date: new Date(),
+};
+```
+
+Our basic implementation won't correctly preserve the `Date` object's behavior.
+
+For modern JavaScript, `structuredClone()` can handle many built-in types:
+
+```js
+const copy = structuredClone(original);
+```
+
+But if the interviewer specifically says:
+
+> "Implement your own deep clone"
+
+they usually want to see **recursion + separate nested objects/arrays**.
+
+---
+
+# 🧠 Deep Clone Memory Trick
+
+```text
+Deep Clone
+→ check primitive
+→ check array
+→ create new object
+→ recursively clone nested values
+```
+
+---
+
+# 26. 🔥🔥 Implement Memoization
+
+## What is Memoization?
+
+Memoization ka matlab hai:
+
+> **Function ke previous results ko cache karna, taaki same input dobara aaye to function ko recalculate na karna pade.**
+
+Example:
+
+Suppose:
+
+```js
+function square(num) {
+  console.log("Calculating...");
+  return num * num;
+}
+```
+
+If we call:
+
+```js
+square(5);
+square(5);
+square(5);
+```
+
+Normal function:
+
+```text
+Calculating...
+Calculating...
+Calculating...
+```
+
+Same calculation 3 times.
+
+Memoization:
+
+```text
+First square(5)
+    ↓
+calculate
+    ↓
+store 25
+
+Second square(5)
+    ↓
+cache has 25
+    ↓
+return 25
+
+Third square(5)
+    ↓
+cache has 25
+    ↓
+return 25
+```
+
+So calculation happens only once.
+
+---
+
+# 🔥🔥 Why is memoization useful?
+
+Memoization useful hai jab function:
+
+```text
+expensive
++
+same inputs repeatedly
+```
+
+ke saath call hota hai.
+
+Examples:
+
+```text
+Complex calculations
+Fibonacci
+Data transformations
+Repeated API-related processing
+Expensive React calculations
+```
+
+---
+
+# 🔥🔥🔥 Implement Your Own Memoization
+
+Basic version:
+
+```js
+function memoize(callback) {
+  const cache = {};
+
+  return function (value) {
+    if (cache[value] !== undefined) {
+      return cache[value];
+    }
+
+    const result = callback(value);
+
+    cache[value] = result;
+
+    return result;
+  };
+}
+```
+
+Example:
+
+```js
+function square(num) {
+  console.log("Calculating...");
+  return num * num;
+}
+
+const memoizedSquare = memoize(square);
+
+console.log(memoizedSquare(5));
+console.log(memoizedSquare(5));
+console.log(memoizedSquare(10));
+console.log(memoizedSquare(5));
+```
+
+Output:
+
+```text
+Calculating...
+25
+
+25
+
+Calculating...
+100
+
+25
+```
+
+Notice:
+
+```text
+square(5)
+```
+
+sirf **ek baar calculate** hua.
+
+---
+
+# 🧠 How does it work?
+
+Initially:
+
+```text
+cache = {}
+```
+
+First call:
+
+```js
+memoizedSquare(5);
+```
+
+Cache mein `5` nahi hai.
+
+So:
+
+```text
+calculate 5 × 5
+      ↓
+25
+      ↓
+cache[5] = 25
+```
+
+Cache:
+
+```text
+{
+  5: 25
+}
+```
+
+---
+
+# Second call
+
+```js
+memoizedSquare(5);
+```
+
+Now cache contains:
+
+```text
+5 → 25
+```
+
+So:
+
+```text
+return 25
+```
+
+No calculation.
+
+---
+
+# 🔥🔥🔥 The most important part
+
+Memoization has two steps:
+
+```text
+1. Check cache
+
+2. If not present:
+   calculate
+   store result
+```
+
+Think:
+
+```text
+input
+  ↓
+cache?
+ ↓     ↓
+YES    NO
+ ↓      ↓
+return  calculate
+         ↓
+       store
+         ↓
+       return
+```
+
+---
+
+# 🔥🔥🔥 Why is `cache` inside `memoize()`?
+
+```js
+function memoize(callback) {
+  const cache = {};
+
+  return function (value) {
+    ...
+  };
+}
+```
+
+Because of **closure**.
+
+The returned function remembers:
+
+```text
+cache
+```
+
+even after `memoize()` has finished.
+
+So:
+
+```text
+memoize()
+   ↓
+creates cache
+   ↓
+returns function
+   ↓
+returned function remembers cache
+```
+
+Again, this connects directly to the **closures** topic you already studied.
+
+---
+
+# 🔥🔥🔥 Better Memoization Implementation
+
+The simple version has a problem.
+
+It only handles one primitive argument well.
+
+For example:
+
+```js
+function add(a, b) {
+  return a + b;
+}
+```
+
+We want:
+
+```js
+memoizedAdd(2, 3);
+memoizedAdd(2, 3);
+```
+
+We can use `...args`:
+
+```js
+function memoize(callback) {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = callback(...args);
+
+    cache.set(key, result);
+
+    return result;
+  };
+}
+```
+
+Example:
+
+```js
+function add(a, b) {
+  console.log("Calculating...");
+  return a + b;
+}
+
+const memoizedAdd = memoize(add);
+
+console.log(memoizedAdd(2, 3));
+console.log(memoizedAdd(2, 3));
+console.log(memoizedAdd(5, 10));
+console.log(memoizedAdd(2, 3));
+```
+
+Output:
+
+```text
+Calculating...
+5
+
+5
+
+Calculating...
+15
+
+5
+```
+
+---
+
+# 🧠 Why use `Map()`?
+
+Instead of:
+
+```js
+const cache = {};
+```
+
+we can use:
+
+```js
+const cache = new Map();
+```
+
+Then:
+
+```js
+cache.has(key);
+```
+
+checks whether result exists.
+
+And:
+
+```js
+cache.get(key);
+```
+
+gets cached result.
+
+And:
+
+```js
+cache.set(key, result);
+```
+
+stores result.
+
+---
+
+# 🔥🔥🔥 Why `JSON.stringify(args)`?
+
+Suppose:
+
+```js
+args = [2, 3];
+```
+
+We convert it to:
+
+```text
+"[2,3]"
+```
+
+That becomes our cache key.
+
+So:
+
+```text
+[2, 3]
+ ↓
+"[2,3]"
+```
+
+Same arguments:
+
+```text
+[2, 3]
+ ↓
+"[2,3]"
+```
+
+Same key → cached result.
+
+---
+
+# 🔥🔥🔥 Important Interview Point
+
+Memoization works best when the function is:
+
+```text
+pure
+```
+
+Meaning:
+
+> Same input → same output.
+
+For example:
+
+```js
+function square(num) {
+  return num * num;
+}
+```
+
+is a good candidate.
+
+But:
+
+```js
+function getCurrentTime() {
+  return Date.now();
+}
+```
+
+is not a good candidate.
+
+Because:
+
+```text
+same call
+→ different time
+```
+
+Caching it would give an old result.
+
+---
+
+# 🧠 Memoization Memory Trick
+
+```text
+Memoization
+→ Cache previous result
+→ Same input?
+→ Return cached result
+→ Otherwise calculate and cache
+```
+
+One line:
+
+```text
+memoization = cache + function result
+```
+
+---
+
+# 27. 🔥🔥 Implement a Curry Function
+
+## What is Currying?
+
+Currying ka matlab hai:
+
+> Ek function jo multiple arguments leta hai, usko aise functions mein convert karna jahan **one argument at a time** diya ja sake.
+
+Normal function:
+
+```js
+function add(a, b, c) {
+  return a + b + c;
+}
+
+add(1, 2, 3);
+```
+
+Output:
+
+```text
+6
+```
+
+Curried version:
+
+```js
+add(1)(2)(3);
+```
+
+Output:
+
+```text
+6
+```
+
+So:
+
+```text
+Normal:
+
+add(1, 2, 3)
+
+
+Curried:
+
+add(1)
+   ↓
+  function
+   ↓
+(2)
+   ↓
+  function
+   ↓
+(3)
+   ↓
+  6
+```
+
+---
+
+# 🔥🔥🔥 Why is it called currying?
+
+Because:
+
+```text
+f(a, b, c)
+```
+
+is transformed into:
+
+```text
+f(a)(b)(c)
+```
+
+Instead of giving all arguments together, we give them one by one.
+
+---
+
+# 🔥🔥🔥 Implement a Curry Function
+
+Suppose:
+
+```js
+function add(a, b, c) {
+  return a + b + c;
+}
+```
+
+We want:
+
+```js
+const curriedAdd = curry(add);
+
+console.log(curriedAdd(1)(2)(3));
+```
+
+Output:
+
+```text
+6
+```
+
+Implementation:
+
+```js
+function curry(callback) {
+  return function curried(...args) {
+    if (args.length >= callback.length) {
+      return callback(...args);
+    }
+
+    return function (...nextArgs) {
+      return curried(...args, ...nextArgs);
+    };
+  };
+}
+```
+
+Ye thoda scary lag sakta hai, so let's break it down.
+
+---
+
+# 🧠 Step 1 — `callback.length`
+
+Suppose:
+
+```js
+function add(a, b, c) {
+  return a + b + c;
+}
+```
+
+Then:
+
+```js
+add.length;
+```
+
+returns:
+
+```text
+3
+```
+
+Because function expects 3 parameters.
+
+So our curry function knows:
+
+```text
+Need 3 arguments
+```
+
+---
+
+# 🧠 Step 2 — First call
+
+```js
+curriedAdd(1);
+```
+
+Now:
+
+```text
+args = [1]
+```
+
+Required:
+
+```text
+3
+```
+
+We don't have enough.
+
+So:
+
+```js
+if (args.length >= callback.length)
+```
+
+is:
+
+```text
+1 >= 3
+→ false
+```
+
+Therefore:
+
+```js
+return function (...nextArgs) {
+  return curried(...args, ...nextArgs);
+};
+```
+
+A new function is returned.
+
+---
+
+# 🧠 Step 3 — Second call
+
+Now:
+
+```js
+curriedAdd(1)(2);
+```
+
+First call collected:
+
+```text
+[1]
+```
+
+Second call gives:
+
+```text
+[2]
+```
+
+Together:
+
+```text
+[1, 2]
+```
+
+Still need 3 arguments.
+
+So another function is returned.
+
+---
+
+# 🧠 Step 4 — Third call
+
+Now:
+
+```js
+curriedAdd(1)(2)(3);
+```
+
+Arguments become:
+
+```text
+[1, 2, 3]
+```
+
+Now:
+
+```text
+args.length = 3
+callback.length = 3
+```
+
+So:
+
+```js
+return callback(...args);
+```
+
+becomes:
+
+```js
+return add(1, 2, 3);
+```
+
+Result:
+
+```text
+6
+```
+
+---
+
+# 🔥🔥🔥 Full Example
+
+```js
+function curry(callback) {
+  return function curried(...args) {
+    if (args.length >= callback.length) {
+      return callback(...args);
+    }
+
+    return function (...nextArgs) {
+      return curried(...args, ...nextArgs);
+    };
+  };
+}
+
+function add(a, b, c) {
+  return a + b + c;
+}
+
+const curriedAdd = curry(add);
+
+console.log(curriedAdd(1)(2)(3));
+```
+
+Output:
+
+```text
+6
+```
+
+---
+
+# 🔥🔥🔥 Currying doesn't always have to be one argument
+
+Our implementation also supports:
+
+```js
+curriedAdd(1, 2)(3);
+```
+
+and:
+
+```js
+curriedAdd(1)(2, 3);
+```
+
+and:
+
+```js
+curriedAdd(1, 2, 3);
+```
+
+All can produce:
+
+```text
+6
+```
+
+Because we check:
+
+```js
+args.length >= callback.length;
+```
+
+and combine:
+
+```js
+...args,
+...nextArgs
+```
+
+---
+
+# 🔥🔥🔥 Example
+
+```js
+console.log(curriedAdd(1, 2)(3));
+```
+
+Flow:
+
+```text
+[1, 2]
+   ↓
+need 3
+   ↓
+receive 3
+   ↓
+[1, 2, 3]
+   ↓
+add(1, 2, 3)
+   ↓
+6
+```
+
+---
+
+# 🔥🔥🔥 Another Curry Example
+
+Suppose:
+
+```js
+function multiply(a, b, c) {
+  return a * b * c;
+}
+```
+
+Create:
+
+```js
+const curriedMultiply = curry(multiply);
+```
+
+Now:
+
+```js
+console.log(curriedMultiply(2)(3)(4));
+```
+
+Output:
+
+```text
+24
+```
+
+Because:
+
+```text
+2 × 3 × 4 = 24
+```
+
+---
+
+# 🔥🔥🔥 Why is currying useful?
+
+Currying is useful when you want to create **specialized functions**.
+
+Example:
+
+```js
+function multiply(a, b) {
+  return a * b;
+}
+```
+
+Curried:
+
+```js
+const multiplyBy = curry(multiply);
+```
+
+Then:
+
+```js
+const multiplyBy2 = multiplyBy(2);
+```
+
+Now:
+
+```js
+multiplyBy2(5);
+```
+
+gives:
+
+```text
+10
+```
+
+and:
+
+```js
+multiplyBy2(10);
+```
+
+gives:
+
+```text
+20
+```
+
+So:
+
+```text
+multiplyBy2
+→ reusable specialized function
+```
+
+---
+
+# 🔥🔥🔥 Another Real-World Style Example
+
+Suppose:
+
+```js
+function greet(greeting, name) {
+  return `${greeting}, ${name}`;
+}
+```
+
+Curried:
+
+```js
+const curriedGreet = curry(greet);
+```
+
+Now:
+
+```js
+const sayHello = curriedGreet("Hello");
+```
+
+Then:
+
+```js
+console.log(sayHello("Ajay"));
+console.log(sayHello("Rahul"));
+```
+
+Output:
+
+```text
+Hello, Ajay
+Hello, Rahul
+```
+
+We created a reusable function:
+
+```text
+sayHello
+```
+
+---
+
+# 🔥🔥🔥 The Important Difference
+
+## Normal function
+
+```js
+add(1, 2, 3);
+```
+
+All arguments at once.
+
+## Curried function
+
+```js
+add(1)(2)(3);
+```
+
+Arguments one by one.
+
+Think:
+
+```text
+Normal
+→ one function call
+
+Currying
+→ chain of function calls
+```
+
+---
+
+# 🔥🔥🔥 Common Interview Question
+
+### What is the difference between currying and partial application?
+
+This is a common follow-up.
+
+### Currying
+
+Transforms:
+
+```js
+f(a, b, c);
+```
+
+into:
+
+```js
+f(a)(b)(c);
+```
+
+### Partial application
+
+Some arguments pehle se fix kar deta hai.
+
+Example:
+
+```js
+function add(a, b, c) {
+  return a + b + c;
+}
+```
+
+Create:
+
+```text
+add5
+```
+
+where:
+
+```text
+a = 5
+```
+
+Then:
+
+```js
+add5(2, 3);
+```
+
+So:
+
+```text
+Currying
+→ one argument at a time
+
+Partial application
+→ some arguments pre-filled
+```
+
+For your current interview preparation, just remember this distinction.
+
+---
+
+# 🔥🔥🔥 Compare All Three
+
+## Deep Clone
+
+```text
+Original object
+      ↓
+completely independent copy
+```
+
+Main concept:
+
+```text
+recursion
+```
+
+---
+
+## Memoization
+
+```text
+Input
+ ↓
+Cache?
+ ↓       ↓
+YES      NO
+ ↓        ↓
+return   calculate
+cache      ↓
+         store
+```
+
+Main concept:
+
+```text
+cache + closure
+```
+
+---
+
+## Currying
+
+```text
+f(a, b, c)
+
+      ↓
+
+f(a)
+  ↓
+f(b)
+  ↓
+f(c)
+  ↓
+result
+```
+
+Main concept:
+
+```text
+closures + functions returning functions
+```
+
+---
+
+# 🧠 FINAL CHEAT SHEET
+
+## 🔥 Deep Clone
+
+```js
+function deepClone(value) {
+  if (value === null || typeof value !== "object") {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => deepClone(item));
+  }
+
+  const clonedObject = {};
+
+  for (const key in value) {
+    clonedObject[key] = deepClone(value[key]);
+  }
+
+  return clonedObject;
+}
+```
+
+Memory:
+
+```text
+deepClone
+→ new object
+→ new nested objects
+→ recursion
+```
+
+---
+
+## 🔥 Memoization
+
+```js
+function memoize(callback) {
+  const cache = new Map();
+
+  return function (...args) {
+    const key = JSON.stringify(args);
+
+    if (cache.has(key)) {
+      return cache.get(key);
+    }
+
+    const result = callback(...args);
+
+    cache.set(key, result);
+
+    return result;
+  };
+}
+```
+
+Memory:
+
+```text
+memoize
+→ cache previous results
+→ same input → return cached result
+```
+
+---
+
+## 🔥 Curry
+
+```js
+function curry(callback) {
+  return function curried(...args) {
+    if (args.length >= callback.length) {
+      return callback(...args);
+    }
+
+    return function (...nextArgs) {
+      return curried(...args, ...nextArgs);
+    };
+  };
+}
+```
+
+Memory:
+
+```text
+curry
+→ collect arguments
+→ not enough → return function
+→ enough → execute
+```
+
+---
+
+# ⭐ The Three Most Important Interview Ideas
+
+```text
+Deep Clone
+→ "Nested data bhi independent banao."
+
+Memoization
+→ "Same input ka calculation dobara mat karo."
+
+Currying
+→ "Arguments ko gradually collect karo."
+```
+
+And one more important connection:
+
+```text
+Deep Clone
+→ Recursion
+
+Memoization
+→ Closure + Cache
+
+Currying
+→ Closure + Function returning function
+```
+
+Agar interview mein code bhool bhi jao, **ye internal logic explain kar paana** bahut important hai.
+
+<!-- ============================= -->
+
+Bilkul. Ye 4 questions interview mein tricky lag sakte hain, especially bind(), call(), apply() because yahan this ka concept use hota hai.
+
+Pehle ek simple picture:
+
+function composition
+→ functions ko chain karna
+
+bind()
+→ function ko this ke saath baad mein call karna
+
+call()
+→ function ko this ke saath immediately call karna
+
+apply()
+→ function ko this ke saath immediately call karna
+
+- arguments array mein dena
+
+# 28. 🔥🔥 Implement Function Composition
+
+## What is Function Composition?
+
+Function composition ka matlab hai:
+
+> **Ek function ka output doosre function ka input banana.**
+
+Suppose:
+
+```js id="1z7y3k"
+function double(num) {
+  return num * 2;
+}
+
+function square(num) {
+  return num * num;
+}
+```
+
+Agar hum:
+
+```text id="8q2m5c"
+5
+ ↓
+double
+ ↓
+10
+ ↓
+square
+ ↓
+100
+```
+
+karna chahte hain, toh:
+
+```js id="8z5q1p"
+square(double(5));
+```
+
+Output:
+
+```text id="0x7c4m"
+100
+```
+
+Yahi basic function composition hai.
+
+---
+
+# 🔥🔥 Why do we need a composition function?
+
+Instead of manually:
+
+```js id="0v8x6m"
+square(double(5));
+```
+
+hum ek reusable function bana sakte hain:
+
+```js id="5y2q9n"
+const composed = compose(square, double);
+
+console.log(composed(5));
+```
+
+Output:
+
+```text id="p7x3m2"
+100
+```
+
+So:
+
+```text id="c9v4k1"
+compose()
+→ multiple functions ko connect karta hai
+```
+
+---
+
+# 🔥🔥🔥 Implement Your Own `compose()`
+
+A simple implementation:
+
+```js id="m3q8v1"
+function compose(...functions) {
+  return function (value) {
+    return functions.reduceRight((result, fn) => fn(result), value);
+  };
+}
+```
+
+Example:
+
+```js id="t5n2x8"
+function double(num) {
+  return num * 2;
+}
+
+function square(num) {
+  return num * num;
+}
+
+const composed = compose(square, double);
+
+console.log(composed(5));
+```
+
+Output:
+
+```text id="r8k4z2"
+100
+```
+
+---
+
+# 🧠 Why `reduceRight()`?
+
+Suppose:
+
+```js id="f7m2q9"
+compose(square, double);
+```
+
+We want:
+
+```text id="c2x8v4"
+double first
+    ↓
+square second
+```
+
+So:
+
+```text id="z4p1n7"
+5
+ ↓
+double
+ ↓
+10
+ ↓
+square
+ ↓
+100
+```
+
+But functions were passed as:
+
+```text id="a9k3m6"
+square, double
+```
+
+Therefore we go from **right to left**.
+
+That's why:
+
+```js id="b8v4y2"
+reduceRight();
+```
+
+is used.
+
+---
+
+# 🔥🔥🔥 Another Example
+
+```js id="u2m7x9"
+function add10(num) {
+  return num + 10;
+}
+
+function double(num) {
+  return num * 2;
+}
+
+function square(num) {
+  return num * num;
+}
+
+const result = compose(square, double, add10);
+
+console.log(result(5));
+```
+
+Flow:
+
+```text id="q3w8k1"
+5
+ ↓
+add10
+ ↓
+15
+ ↓
+double
+ ↓
+30
+ ↓
+square
+ ↓
+900
+```
+
+Output:
+
+```text id="d6p2m8"
+900
+```
+
+---
+
+# 🔥🔥🔥 `compose()` Mental Model
+
+```text id="k8q2v5"
+compose(f3, f2, f1)
+
+input
+ ↓
+f1
+ ↓
+f2
+ ↓
+f3
+ ↓
+output
+```
+
+Memory trick:
+
+```text id="z5m1x7"
+compose()
+→ right to left
+```
+
+---
+
+# 🔥🔥🔥 `compose()` vs `pipe()`
+
+This is a common interview follow-up.
+
+### `compose()`
+
+Runs:
+
+```text id="x7q3m9"
+right → left
+```
+
+Example:
+
+```js id="a4v8k2"
+compose(square, double)(5);
+```
+
+means:
+
+```text id="p9m2x5"
+square(double(5))
+```
+
+### `pipe()`
+
+Runs:
+
+```text id="r6k1z8"
+left → right
+```
+
+Example:
+
+```js id="c5w7n3"
+pipe(double, square)(5);
+```
+
+means:
+
+```text id="u8q2m4"
+square(double(5))
+```
+
+So:
+
+```text id="h3v9k1"
+compose → right to left
+
+pipe → left to right
+```
+
+---
+
+# 29. 🔥🔥 Implement a Custom `bind()`
+
+## First: What is `bind()`?
+
+`bind()` ka simple meaning:
+
+> **Ek function ko ek specific `this` value ke saath permanently attach karke ek new function return karna.**
+
+Example:
+
+```js id="j7m3q8"
+const user = {
+  name: "Ajay",
+};
+
+function greet() {
+  console.log("Hello " + this.name);
+}
+```
+
+Normally:
+
+```js id="z5x1v9"
+greet();
+```
+
+`this` expected object nahi ho sakta.
+
+But:
+
+```js id="k2q7m4"
+const boundGreet = greet.bind(user);
+
+boundGreet();
+```
+
+Output:
+
+```text id="w8n3p6"
+Hello Ajay
+```
+
+Because:
+
+```text id="m4v9x2"
+boundGreet
+    ↓
+this = user
+```
+
+---
+
+# 🔥🔥🔥 The important thing about `bind()`
+
+`bind()` function ko **immediately execute nahi karta**.
+
+It returns a **new function**.
+
+Example:
+
+```js id="r3k8y1"
+const boundGreet = greet.bind(user);
+```
+
+At this point:
+
+```text id="q6m2x9"
+greet()
+```
+
+has NOT executed.
+
+Later:
+
+```js id="v7p4n8"
+boundGreet();
+```
+
+then function executes.
+
+Remember:
+
+```text id="x5q1m7"
+bind()
+→ returns new function
+→ executes later
+```
+
+---
+
+# 🔥🔥🔥 Implement Custom `bind()`
+
+Basic implementation:
+
+```js id="c8m4z2"
+Function.prototype.myBind = function (context) {
+  const originalFunction = this;
+
+  return function (...args) {
+    return originalFunction.apply(context, args);
+  };
+};
+```
+
+Example:
+
+```js id="n7q3v8"
+const user = {
+  name: "Ajay",
+};
+
+function greet(message) {
+  console.log(message + ", " + this.name);
+}
+
+const boundGreet = greet.myBind(user);
+
+boundGreet("Hello");
+```
+
+Output:
+
+```text id="p4x9m2"
+Hello, Ajay
+```
+
+---
+
+# 🧠 Understand `this` here
+
+When we do:
+
+```js id="z8m3q5"
+greet.myBind(user);
+```
+
+Inside:
+
+```js id="h2v7n9"
+Function.prototype.myBind = function (context) {
+```
+
+`this` refers to:
+
+```text id="a6q1x4"
+greet
+```
+
+So:
+
+```js id="k3m8p2"
+const originalFunction = this;
+```
+
+means:
+
+```text id="w5n9r7"
+originalFunction = greet
+```
+
+Then we return a new function.
+
+---
+
+# 🔥🔥🔥 Why use `apply()` inside our `bind()`?
+
+This:
+
+```js id="b7q4x1"
+originalFunction.apply(context, args);
+```
+
+means:
+
+```text id="m8p2z5"
+call originalFunction
+with this = context
+and arguments = args
+```
+
+So:
+
+```js id="q4n7v3"
+boundGreet("Hello");
+```
+
+becomes conceptually:
+
+```js id="s9x2m6"
+greet.apply(user, ["Hello"]);
+```
+
+which means:
+
+```text id="r5k8q1"
+this = user
+message = "Hello"
+```
+
+---
+
+# 🔥🔥🔥 `bind()` Can Also Pre-fill Arguments
+
+This is important.
+
+Suppose:
+
+```js id="u3m7x8"
+function multiply(a, b) {
+  return a * b;
+}
+```
+
+We can:
+
+```js id="y6q2p4"
+const multiplyBy2 = multiply.bind(null, 2);
+```
+
+Then:
+
+```js id="h8m3v9"
+console.log(multiplyBy2(5));
+```
+
+Output:
+
+```text id="j4x7n2"
+10
+```
+
+Because:
+
+```text id="a8q5m1"
+a = 2
+b = 5
+
+2 × 5 = 10
+```
+
+So `bind()` can do two things:
+
+```text id="f7p2k9"
+1. Fix `this`
+
+2. Pre-fill arguments
+```
+
+---
+
+# 🔥🔥🔥 Better Custom `bind()`
+
+```js id="v3m8q1"
+Function.prototype.myBind = function (context, ...boundArgs) {
+  const originalFunction = this;
+
+  return function (...newArgs) {
+    return originalFunction.apply(context, [...boundArgs, ...newArgs]);
+  };
+};
+```
+
+Example:
+
+```js id="c6x2m7"
+function multiply(a, b, c) {
+  return a * b * c;
+}
+
+const multiplyBy2 = multiply.myBind(null, 2);
+
+console.log(multiplyBy2(3, 4));
+```
+
+Output:
+
+```text id="n8q4v1"
+24
+```
+
+Because:
+
+```text id="z5m2k7"
+boundArgs = [2]
+
+newArgs = [3, 4]
+
+combined = [2, 3, 4]
+
+2 × 3 × 4 = 24
+```
+
+---
+
+# 🧠 `bind()` Mental Model
+
+```text id="q7m3x9"
+function
+   +
+context
+   +
+optional arguments
+   ↓
+bind()
+   ↓
+new function
+   ↓
+execute later
+```
+
+Memory trick:
+
+```text id="c4v8n2"
+bind()
+→ "Prepare now, execute later."
+```
+
+---
+
+# 30. 🔥 Implement a Custom `call()`
+
+## What is `call()`?
+
+`call()` ka meaning:
+
+> **Function ko immediately execute karo aur `this` ko explicitly set karo.**
+
+Example:
+
+```js id="m2q7x5"
+const user = {
+  name: "Ajay",
+};
+
+function greet(message) {
+  console.log(message + ", " + this.name);
+}
+
+greet.call(user, "Hello");
+```
+
+Output:
+
+```text id="p8v3k1"
+Hello, Ajay
+```
+
+Notice:
+
+```text id="h4m9x2"
+call()
+→ execute immediately
+```
+
+---
+
+# 🔥🔥 `bind()` vs `call()`
+
+Very important:
+
+```text id="z7q2m5"
+bind()
+→ returns a new function
+→ execute later
+
+call()
+→ immediately executes function
+```
+
+Example:
+
+```js id="a5n8v3"
+const bound = greet.bind(user);
+```
+
+Nothing executes yet.
+
+But:
+
+```js id="k3x7m1"
+greet.call(user);
+```
+
+executes immediately.
+
+---
+
+# 🔥🔥🔥 How can we implement `call()`?
+
+JavaScript mein function ko kisi object ka temporary method bana sakte hain.
+
+Suppose:
+
+```js id="r8m2q6"
+const user = {
+  name: "Ajay",
+};
+
+function greet() {
+  console.log(this.name);
+}
+```
+
+Normally:
+
+```text id="y4p7n1"
+greet()
+```
+
+But we can temporarily do:
+
+```js id="v6x3m9"
+user.greet = greet;
+```
+
+Now:
+
+```js id="j2q8k5"
+user.greet();
+```
+
+Inside `greet()`:
+
+```text id="c9m4x7"
+this = user
+```
+
+because `user.greet()` is a method call.
+
+Then we remove it.
+
+---
+
+# 🔥🔥🔥 Custom `call()`
+
+```js id="n5q2v8"
+Function.prototype.myCall = function (context, ...args) {
+  const key = Symbol();
+
+  context[key] = this;
+
+  const result = context[key](...args);
+
+  delete context[key];
+
+  return result;
+};
+```
+
+Example:
+
+```js id="x7m3p9"
+const user = {
+  name: "Ajay",
+};
+
+function greet(message) {
+  return message + ", " + this.name;
+}
+
+const result = greet.myCall(user, "Hello");
+
+console.log(result);
+```
+
+Output:
+
+```text id="f2q8n5"
+Hello, Ajay
+```
+
+---
+
+# 🧠 Understand this implementation
+
+## Step 1
+
+```js id="w8m2x4"
+const key = Symbol();
+```
+
+We create a unique property name.
+
+Why?
+
+Because we don't want to accidentally overwrite an existing property.
+
+---
+
+# Step 2
+
+```js id="q3v7n9"
+context[key] = this;
+```
+
+Here:
+
+```text id="m5x1k8"
+this = greet
+```
+
+So effectively:
+
+```text id="a9q4p2"
+user[someUniqueKey] = greet
+```
+
+Now `greet` temporarily becomes a method of `user`.
+
+---
+
+# Step 3
+
+```js id="k7m3x5"
+const result = context[key](...args);
+```
+
+This is the important part.
+
+Because we're calling:
+
+```js id="v2q8n6"
+context[key]();
+```
+
+the `this` inside the function becomes:
+
+```text id="j4x9m1"
+context
+```
+
+So:
+
+```text id="d7p3k8"
+this = user
+```
+
+---
+
+# Step 4
+
+```js id="w5m2q7"
+delete context[key];
+```
+
+We remove the temporary property.
+
+So the original object remains clean.
+
+---
+
+# Step 5
+
+```js id="n8q4x3"
+return result;
+```
+
+Return whatever the original function returned.
+
+---
+
+# 🔥🔥🔥 Example with Arguments
+
+```js id="x3m7p1"
+const user = {
+  name: "Ajay",
+};
+
+function introduce(age, city) {
+  return `${this.name} is ${age} years old and lives in ${city}`;
+}
+
+console.log(introduce.myCall(user, 25, "Delhi"));
+```
+
+Output:
+
+```text id="p6k2v9"
+Ajay is 25 years old and lives in Delhi
+```
+
+Arguments:
+
+```text id="c8m3q5"
+25
+Delhi
+```
+
+are passed individually.
+
+---
+
+# 31. 🔥 Implement a Custom `apply()`
+
+## What is `apply()`?
+
+`apply()` almost exactly `call()` ki tarah hai.
+
+Difference:
+
+```text id="m7q2x8"
+call()
+→ arguments individually
+
+apply()
+→ arguments as an array
+```
+
+Example:
+
+```js id="j4n8p2"
+function introduce(age, city) {
+  return `${this.name} is ${age} years old and lives in ${city}`;
+}
+
+const user = {
+  name: "Ajay",
+};
+
+introduce.call(user, 25, "Delhi");
+
+introduce.apply(user, [25, "Delhi"]);
+```
+
+Both produce:
+
+```text id="q8m3v5"
+Ajay is 25 years old and lives in Delhi
+```
+
+---
+
+# 🔥🔥🔥 Implement Custom `apply()`
+
+```js id="x7p2m9"
+Function.prototype.myApply = function (context, args) {
+  const key = Symbol();
+
+  context[key] = this;
+
+  const result = context[key](...(args || []));
+
+  delete context[key];
+
+  return result;
+};
+```
+
+Example:
+
+```js id="n4q8v2"
+const user = {
+  name: "Ajay",
+};
+
+function greet(message, age) {
+  return `${message}, ${this.name}, age ${age}`;
+}
+
+const result = greet.myApply(user, ["Hello", 25]);
+
+console.log(result);
+```
+
+Output:
+
+```text id="k6m3x8"
+Hello, Ajay, age 25
+```
+
+---
+
+# 🧠 Understand the Important Difference
+
+### `call()`
+
+```js id="p7x3m1"
+greet.myCall(user, "Hello", 25);
+```
+
+Arguments:
+
+```text id="a5q8n2"
+"Hello"
+25
+```
+
+---
+
+### `apply()`
+
+```js id="v4m9k2"
+greet.myApply(user, ["Hello", 25]);
+```
+
+Arguments:
+
+```text id="x8p2q6"
+["Hello", 25]
+```
+
+That's the main difference.
+
+---
+
+# 🔥🔥🔥 Call vs Apply vs Bind
+
+This table is VERY important for interviews.
+
+| Method    | Executes immediately? | Returns         | Arguments               |
+| --------- | --------------------- | --------------- | ----------------------- |
+| `call()`  | Yes                   | Function result | Individual              |
+| `apply()` | Yes                   | Function result | Array                   |
+| `bind()`  | No                    | New function    | Individual / pre-filled |
+
+Memory:
+
+```text id="q2m8v5"
+call()
+→ now + individual args
+
+apply()
+→ now + array args
+
+bind()
+→ later + returns function
+```
+
+---
+
+# 🔥🔥🔥 Same Example with All Three
+
+```js id="m8x3q7"
+const user = {
+  name: "Ajay",
+};
+
+function greet(message, age) {
+  console.log(message + ", " + this.name + ", age " + age);
+}
+```
+
+### `call()`
+
+```js id="c7p2n9"
+greet.call(user, "Hello", 25);
+```
+
+Immediately executes.
+
+---
+
+### `apply()`
+
+```js id="v5m8x1"
+greet.apply(user, ["Hello", 25]);
+```
+
+Immediately executes.
+
+---
+
+### `bind()`
+
+```js id="z3q7m2"
+const boundGreet = greet.bind(user, "Hello", 25);
+```
+
+Nothing executes yet.
+
+Then:
+
+```js id="f8n4x6"
+boundGreet();
+```
+
+executes.
+
+---
+
+# 🔥🔥🔥 Why do we use `Symbol()` in custom call/apply?
+
+Suppose we did:
+
+```js id="y6m2q8"
+context.temp = this;
+```
+
+Problem:
+
+What if the object already has:
+
+```js id="p4x8n1"
+temp;
+```
+
+property?
+
+We would overwrite it.
+
+`Symbol()` creates a unique property:
+
+```js id="m7q3v9"
+const key = Symbol();
+```
+
+So:
+
+```text id="r5n8x2"
+context[uniqueSymbol]
+```
+
+is extremely unlikely to conflict with existing properties.
+
+---
+
+# 🔥🔥🔥 Important Edge Case
+
+What if context is `null` or `undefined`?
+
+A simplified implementation may assume a valid object:
+
+```js id="k8m3q5"
+context[key] = this;
+```
+
+But a more complete polyfill needs to handle JavaScript's actual `this` rules, including:
+
+```text id="p2v7x4"
+null
+undefined
+primitive values
+strict mode
+```
+
+For interview purposes, first master the core mechanism:
+
+```text id="x4q9m1"
+temporary method
+→ execute
+→ delete temporary method
+```
+
+---
+
+# 🔥🔥🔥 Function Composition Example
+
+Let's connect composition with the functions you already learned.
+
+```js id="z6m2p8"
+function add10(num) {
+  return num + 10;
+}
+
+function double(num) {
+  return num * 2;
+}
+
+function square(num) {
+  return num * num;
+}
+```
+
+Compose:
+
+```js id="q8x3n5"
+const process = compose(square, double, add10);
+```
+
+Then:
+
+```js id="m4v7k2"
+console.log(process(5));
+```
+
+Flow:
+
+```text id="a8p3q6"
+5
+ ↓
+add10
+ ↓
+15
+ ↓
+double
+ ↓
+30
+ ↓
+square
+ ↓
+900
+```
+
+Output:
+
+```text id="w7n2x4"
+900
+```
+
+---
+
+# 🔥🔥🔥 Final Interview Implementations
+
+## 1. `compose()`
+
+```js id="r5m8q2"
+function compose(...functions) {
+  return function (value) {
+    return functions.reduceRight((result, fn) => fn(result), value);
+  };
+}
+```
+
+Remember:
+
+```text id="x3p7n9"
+compose → right to left
+```
+
+---
+
+## 2. Custom `bind()`
+
+```js id="k8m4v1"
+Function.prototype.myBind = function (context, ...boundArgs) {
+  const originalFunction = this;
+
+  return function (...newArgs) {
+    return originalFunction.apply(context, [...boundArgs, ...newArgs]);
+  };
+};
+```
+
+Remember:
+
+```text id="q6x2m8"
+bind
+→ returns new function
+→ executes later
+```
+
+---
+
+## 3. Custom `call()`
+
+```js id="p4n7x3"
+Function.prototype.myCall = function (context, ...args) {
+  const key = Symbol();
+
+  context[key] = this;
+
+  const result = context[key](...args);
+
+  delete context[key];
+
+  return result;
+};
+```
+
+Remember:
+
+```text id="z8m3q5"
+call
+→ executes immediately
+→ arguments individually
+```
+
+---
+
+## 4. Custom `apply()`
+
+```js id="v2q9m6"
+Function.prototype.myApply = function (context, args) {
+  const key = Symbol();
+
+  context[key] = this;
+
+  const result = context[key](...(args || []));
+
+  delete context[key];
+
+  return result;
+};
+```
+
+Remember:
+
+```text id="j5x8p2"
+apply
+→ executes immediately
+→ arguments as array
+```
+
+---
+
+# 🧠 FINAL CHEAT SHEET
+
+```text id="m7q3v9"
+compose()
+→ combine functions
+→ right to left
+
+bind()
+→ fix this
+→ returns new function
+→ execute later
+
+call()
+→ fix this
+→ execute immediately
+→ individual arguments
+
+apply()
+→ fix this
+→ execute immediately
+→ array of arguments
+```
+
+### ⭐ One-line memory trick
+
+```text id="x4p8n2"
+compose → chain
+
+bind    → later
+
+call    → now + args
+
+apply   → now + array
+```
+
+And the most important connection:
+
+```text id="q6m2v8"
+bind / call / apply
+        ↓
+       this
+        ↓
+function execution context
+```
+
+Agar interviewer custom `call()`/`apply()` pooche, **temporary method + `this` + `Symbol()` + delete** ka logic explain kar paana code yaad rakhne se zyada important hai.

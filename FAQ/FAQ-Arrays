@@ -1,0 +1,3704 @@
+# 16. Important Array Coding Questions ⭐⭐⭐
+
+Arrays mein multiple values ek jagah store kar sakte hain.
+
+Example:
+
+```js
+const numbers = [10, 5, 20, 8, 15];
+```
+
+Indexes:
+
+```text
+10   5   20   8   15
+0    1   2    3   4
+```
+
+Array problems solve karte waqt ek important habit banao:
+
+> **Pehle dekho kya mujhe array ke har element ko ek-ek karke check karna hai.**
+
+Most of these questions mein answer `loop` ke through build hota hai.
+
+---
+
+# 253. 🔥🔥🔥 Find largest number in an array
+
+## What is the question asking?
+
+Given:
+
+```js
+const numbers = [10, 5, 20, 8, 15];
+```
+
+Find the biggest number.
+
+Answer:
+
+```text
+20
+```
+
+---
+
+# 🔥 Method 1 — Using a loop
+
+```js
+function findLargest(numbers) {
+  let largest = numbers[0];
+
+  for (let i = 1; i < numbers.length; i++) {
+    if (numbers[i] > largest) {
+      largest = numbers[i];
+    }
+  }
+
+  return largest;
+}
+
+console.log(findLargest([10, 5, 20, 8, 15]));
+```
+
+### Output
+
+```text
+20
+```
+
+---
+
+# 🧠 Understand it step by step
+
+Array:
+
+```text
+10   5   20   8   15
+```
+
+We start with:
+
+```js
+let largest = numbers[0];
+```
+
+So:
+
+```text
+largest = 10
+```
+
+Now we compare every remaining number.
+
+### Compare `5`
+
+```text
+5 > 10
+```
+
+False.
+
+So:
+
+```text
+largest = 10
+```
+
+---
+
+### Compare `20`
+
+```text
+20 > 10
+```
+
+True.
+
+So:
+
+```text
+largest = 20
+```
+
+---
+
+### Compare `8`
+
+```text
+8 > 20
+```
+
+False.
+
+Still:
+
+```text
+largest = 20
+```
+
+---
+
+### Compare `15`
+
+```text
+15 > 20
+```
+
+False.
+
+Final:
+
+```text
+largest = 20
+```
+
+---
+
+# 🔥🔥 Why start with `numbers[0]`?
+
+You might see:
+
+```js
+let largest = 0;
+```
+
+But that's dangerous.
+
+Consider:
+
+```js
+const numbers = [-10, -5, -20];
+```
+
+If:
+
+```js
+let largest = 0;
+```
+
+then the answer incorrectly stays `0`.
+
+But `0` isn't even in the array.
+
+That's why we use:
+
+```js
+let largest = numbers[0];
+```
+
+Now:
+
+```text
+largest = -10
+```
+
+and the algorithm works correctly.
+
+---
+
+# 🔥🔥🔥 Predict this
+
+```js
+const numbers = [-10, -5, -20];
+
+let largest = numbers[0];
+
+for (let i = 1; i < numbers.length; i++) {
+  if (numbers[i] > largest) {
+    largest = numbers[i];
+  }
+}
+
+console.log(largest);
+```
+
+### Output
+
+```text
+-5
+```
+
+---
+
+# 🔥🔥 Method 2 — `Math.max()`
+
+JavaScript gives us:
+
+```js
+Math.max();
+```
+
+So:
+
+```js
+const numbers = [10, 5, 20, 8, 15];
+
+console.log(Math.max(...numbers));
+```
+
+Output:
+
+```text
+20
+```
+
+Here:
+
+```js
+...numbers
+```
+
+becomes:
+
+```text
+10, 5, 20, 8, 15
+```
+
+So:
+
+```js
+Math.max(10, 5, 20, 8, 15);
+```
+
+returns:
+
+```text
+20
+```
+
+### 🧠 Interview tip
+
+Know both.
+
+```text
+Loop
+→ shows your algorithmic thinking
+
+Math.max()
+→ short practical solution
+```
+
+If interviewer says **"without built-in methods"**, use the loop.
+
+---
+
+# 254. 🔥🔥🔥 Find smallest number in an array
+
+This is almost exactly the same problem.
+
+Instead of asking:
+
+```text
+Is this number greater?
+```
+
+we ask:
+
+```text
+Is this number smaller?
+```
+
+---
+
+# 🔥 Method
+
+```js
+function findSmallest(numbers) {
+  let smallest = numbers[0];
+
+  for (let i = 1; i < numbers.length; i++) {
+    if (numbers[i] < smallest) {
+      smallest = numbers[i];
+    }
+  }
+
+  return smallest;
+}
+
+console.log(findSmallest([10, 5, 20, 8, 15]));
+```
+
+### Output
+
+```text
+5
+```
+
+---
+
+# 🧠 Dry Run
+
+Start:
+
+```text
+smallest = 10
+```
+
+Compare `5`:
+
+```text
+5 < 10
+→ true
+
+smallest = 5
+```
+
+Compare `20`:
+
+```text
+20 < 5
+→ false
+```
+
+Compare `8`:
+
+```text
+8 < 5
+→ false
+```
+
+Compare `15`:
+
+```text
+15 < 5
+→ false
+```
+
+Final:
+
+```text
+5
+```
+
+---
+
+# 🔥🔥 Negative numbers
+
+```js
+console.log(findSmallest([-10, -5, -20, 0]));
+```
+
+Output:
+
+```text
+-20
+```
+
+Again, don't use:
+
+```js
+let smallest = 0;
+```
+
+because that can produce wrong results.
+
+Use:
+
+```js
+let smallest = numbers[0];
+```
+
+---
+
+# 🔥🔥 Method 2 — `Math.min()`
+
+```js
+const numbers = [10, 5, 20, 8, 15];
+
+console.log(Math.min(...numbers));
+```
+
+Output:
+
+```text
+5
+```
+
+---
+
+# 🧠 Largest vs Smallest
+
+These two patterns are almost identical:
+
+```js
+// Largest
+if (numbers[i] > largest) {
+  largest = numbers[i];
+}
+```
+
+```js
+// Smallest
+if (numbers[i] < smallest) {
+  smallest = numbers[i];
+}
+```
+
+### 🔥 Memory trick
+
+```text
+Largest  → >
+Smallest → <
+```
+
+---
+
+# 255. 🔥🔥🔥 Find second-largest number
+
+Now the question becomes more interesting.
+
+Given:
+
+```js
+const numbers = [10, 5, 20, 8, 15];
+```
+
+Largest:
+
+```text
+20
+```
+
+Second-largest:
+
+```text
+15
+```
+
+---
+
+# 🔥 First understand the idea
+
+We need to remember **two values**:
+
+```text
+largest
+secondLargest
+```
+
+For:
+
+```text
+[10, 5, 20, 8, 15]
+```
+
+eventually:
+
+```text
+largest = 20
+secondLargest = 15
+```
+
+---
+
+# 🔥🔥 Method — One loop
+
+```js
+function findSecondLargest(numbers) {
+  let largest = -Infinity;
+  let secondLargest = -Infinity;
+
+  for (let num of numbers) {
+    if (num > largest) {
+      secondLargest = largest;
+      largest = num;
+    } else if (num > secondLargest && num !== largest) {
+      secondLargest = num;
+    }
+  }
+
+  return secondLargest;
+}
+
+console.log(findSecondLargest([10, 5, 20, 8, 15]));
+```
+
+### Output
+
+```text
+15
+```
+
+---
+
+# 🧠 Why `-Infinity`?
+
+We need a starting value smaller than every normal number.
+
+```js
+-Infinity;
+```
+
+is smaller than:
+
+```text
+-100
+-10
+0
+10
+100
+```
+
+So it works even if the array contains negative numbers.
+
+---
+
+# 🧠 Dry Run — VERY IMPORTANT
+
+Array:
+
+```text
+10, 5, 20, 8, 15
+```
+
+Initially:
+
+```text
+largest = -Infinity
+secondLargest = -Infinity
+```
+
+---
+
+### Step 1 — `10`
+
+```text
+10 > -Infinity
+```
+
+True.
+
+So:
+
+```text
+secondLargest = -Infinity
+largest = 10
+```
+
+Now:
+
+```text
+largest = 10
+secondLargest = -Infinity
+```
+
+---
+
+### Step 2 — `5`
+
+Is:
+
+```text
+5 > 10
+```
+
+No.
+
+Then:
+
+```text
+5 > -Infinity
+```
+
+Yes.
+
+So:
+
+```text
+secondLargest = 5
+```
+
+Now:
+
+```text
+largest = 10
+secondLargest = 5
+```
+
+---
+
+### Step 3 — `20`
+
+Check:
+
+```text
+20 > 10
+```
+
+Yes!
+
+Before replacing `largest`, we move the old largest into second place:
+
+```text
+secondLargest = 10
+largest = 20
+```
+
+Now:
+
+```text
+largest = 20
+secondLargest = 10
+```
+
+---
+
+### Step 4 — `8`
+
+```text
+8 > 20
+```
+
+No.
+
+Check:
+
+```text
+8 > 10
+```
+
+No.
+
+Nothing changes.
+
+---
+
+### Step 5 — `15`
+
+```text
+15 > 20
+```
+
+No.
+
+But:
+
+```text
+15 > 10
+```
+
+Yes.
+
+So:
+
+```text
+secondLargest = 15
+```
+
+Final:
+
+```text
+largest = 20
+secondLargest = 15
+```
+
+---
+
+# 🔥🔥🔥 Why this line is important?
+
+```js
+secondLargest = largest;
+```
+
+Suppose:
+
+```text
+largest = 10
+```
+
+Then we find:
+
+```text
+20
+```
+
+Before changing:
+
+```text
+largest = 10
+```
+
+to:
+
+```text
+largest = 20
+```
+
+we need to save the old largest:
+
+```text
+secondLargest = 10
+```
+
+That's the key idea.
+
+---
+
+# 🔥🔥🔥 Tricky Case — Duplicate Largest
+
+Consider:
+
+```js
+[10, 20, 20, 15];
+```
+
+What is the second-largest?
+
+Usually interviewers mean **second distinct largest**:
+
+```text
+20
+15
+```
+
+So answer:
+
+```text
+15
+```
+
+Our condition:
+
+```js
+num !== largest;
+```
+
+helps prevent the second `20` from becoming the second-largest.
+
+---
+
+# 🔥🔥🔥 Tricky Case — All Same
+
+```js
+[10, 10, 10];
+```
+
+There is no second distinct largest number.
+
+Our function will leave:
+
+```text
+secondLargest = -Infinity
+```
+
+You should decide what the interview expects.
+
+A robust version:
+
+```js
+function findSecondLargest(numbers) {
+  let largest = -Infinity;
+  let secondLargest = -Infinity;
+
+  for (let num of numbers) {
+    if (num > largest) {
+      secondLargest = largest;
+      largest = num;
+    } else if (num > secondLargest && num !== largest) {
+      secondLargest = num;
+    }
+  }
+
+  if (secondLargest === -Infinity) {
+    return null;
+  }
+
+  return secondLargest;
+}
+```
+
+Then:
+
+```js
+console.log(findSecondLargest([10, 10, 10]));
+```
+
+Output:
+
+```text
+null
+```
+
+---
+
+# 🔥🔥🔥 Tricky Case — Only One Element
+
+```js
+[10];
+```
+
+There is no second-largest number.
+
+So:
+
+```text
+null
+```
+
+is a reasonable result.
+
+---
+
+# 🔥🔥🔥 Alternative — Sort
+
+You might see:
+
+```js
+const numbers = [10, 5, 20, 8, 15];
+
+const unique = [...new Set(numbers)];
+
+unique.sort((a, b) => b - a);
+
+console.log(unique[1]);
+```
+
+Output:
+
+```text
+15
+```
+
+Let's understand:
+
+```text
+[10,5,20,8,15]
+       ↓
+sort descending
+       ↓
+[20,15,10,8,5]
+       ↓
+index 1
+       ↓
+15
+```
+
+### ⚠️ Important
+
+Don't write:
+
+```js
+numbers.sort();
+```
+
+for numeric sorting.
+
+JavaScript's default `sort()` compares values as strings.
+
+Example:
+
+```js
+console.log([10, 2, 5].sort());
+```
+
+Output:
+
+```text
+[10, 2, 5]
+```
+
+not:
+
+```text
+[2, 5, 10]
+```
+
+Use:
+
+```js
+numbers.sort((a, b) => a - b);
+```
+
+ascending, or:
+
+```js
+numbers.sort((a, b) => b - a);
+```
+
+descending.
+
+For interviews, the **one-loop solution** is better because it gives:
+
+```text
+O(n)
+```
+
+instead of sorting:
+
+```text
+O(n log n)
+```
+
+---
+
+# 256. 🔥🔥🔥 Remove duplicates from an array
+
+Given:
+
+```js
+const numbers = [1, 2, 2, 3, 4, 4, 5];
+```
+
+We want:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🔥 Method 1 — `Set`
+
+The easiest solution:
+
+```js
+const numbers = [1, 2, 2, 3, 4, 4, 5];
+
+const result = [...new Set(numbers)];
+
+console.log(result);
+```
+
+### Output
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🧠 Understand it
+
+A `Set` stores only unique values.
+
+```js
+new Set([1, 2, 2, 3, 4, 4, 5]);
+```
+
+conceptually becomes:
+
+```text
+1
+2
+3
+4
+5
+```
+
+Then:
+
+```js
+[...new Set(numbers)];
+```
+
+converts the Set back into an array.
+
+So:
+
+```text
+Array
+ ↓
+Set
+ ↓
+unique values
+ ↓
+Array
+```
+
+---
+
+# 🔥🔥 Method 2 — Without `Set`
+
+Sometimes interviewer says:
+
+> "Don't use Set."
+
+Then:
+
+```js
+function removeDuplicates(numbers) {
+  const result = [];
+
+  for (let num of numbers) {
+    if (!result.includes(num)) {
+      result.push(num);
+    }
+  }
+
+  return result;
+}
+
+console.log(removeDuplicates([1, 2, 2, 3, 4, 4, 5]));
+```
+
+### Output
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🧠 Dry Run
+
+Start:
+
+```text
+result = []
+```
+
+Read `1`:
+
+```text
+1 not in result
+→ push
+
+result = [1]
+```
+
+Read `2`:
+
+```text
+2 not in result
+→ push
+
+result = [1,2]
+```
+
+Read second `2`:
+
+```text
+2 already exists
+→ skip
+```
+
+Read `3`:
+
+```text
+result = [1,2,3]
+```
+
+And so on.
+
+Final:
+
+```text
+[1,2,3,4,5]
+```
+
+---
+
+# 🔥🔥🔥 Another approach — `filter()`
+
+You may also see:
+
+```js
+const numbers = [1, 2, 2, 3, 4, 4, 5];
+
+const result = numbers.filter((num, index) => numbers.indexOf(num) === index);
+
+console.log(result);
+```
+
+Output:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+Understand the condition:
+
+```js
+numbers.indexOf(num) === index;
+```
+
+means:
+
+> Keep this element only if this is its **first occurrence**.
+
+For the first `2`:
+
+```text
+indexOf(2) = 1
+current index = 1
+
+1 === 1
+→ keep
+```
+
+For the second `2`:
+
+```text
+indexOf(2) = 1
+current index = 2
+
+1 === 2
+→ false
+→ remove
+```
+
+---
+
+# 257. 🔥🔥🔥 Find duplicate elements
+
+Now this is different from removing duplicates.
+
+Given:
+
+```js
+[1, 2, 2, 3, 4, 4, 5];
+```
+
+We want:
+
+```text
+[2, 4]
+```
+
+Because:
+
+```text
+2 → appears more than once
+4 → appears more than once
+```
+
+---
+
+# 🔥 Method 1 — Frequency object
+
+This is the same frequency pattern you've already learned.
+
+```js
+function findDuplicates(numbers) {
+  const frequency = {};
+  const duplicates = [];
+
+  for (let num of numbers) {
+    frequency[num] = (frequency[num] || 0) + 1;
+  }
+
+  for (let num in frequency) {
+    if (frequency[num] > 1) {
+      duplicates.push(Number(num));
+    }
+  }
+
+  return duplicates;
+}
+
+console.log(findDuplicates([1, 2, 2, 3, 4, 4, 5]));
+```
+
+### Output
+
+```text
+[2, 4]
+```
+
+---
+
+# 🧠 Why `Number(num)`?
+
+Object keys are strings.
+
+For example:
+
+```js
+frequency[2] = 2;
+```
+
+the key is effectively stored as:
+
+```text
+"2"
+```
+
+So when we use:
+
+```js
+for (let num in frequency)
+```
+
+`num` is a string.
+
+That's why:
+
+```js
+Number(num);
+```
+
+converts it back to a number.
+
+---
+
+# 🔥🔥 Method 2 — Using `Set`
+
+This is another very useful pattern.
+
+```js
+function findDuplicates(numbers) {
+  const seen = new Set();
+  const duplicates = new Set();
+
+  for (let num of numbers) {
+    if (seen.has(num)) {
+      duplicates.add(num);
+    } else {
+      seen.add(num);
+    }
+  }
+
+  return [...duplicates];
+}
+
+console.log(findDuplicates([1, 2, 2, 3, 4, 4, 5]));
+```
+
+### Output
+
+```text
+[2, 4]
+```
+
+---
+
+# 🧠 Understand the logic
+
+We maintain two Sets:
+
+```text
+seen
+duplicates
+```
+
+Initially:
+
+```text
+seen = {}
+duplicates = {}
+```
+
+Read `1`:
+
+```text
+1 not seen
+→ seen.add(1)
+```
+
+Read `2`:
+
+```text
+2 not seen
+→ seen.add(2)
+```
+
+Read second `2`:
+
+```text
+2 already seen
+→ duplicates.add(2)
+```
+
+Read `3`:
+
+```text
+3 not seen
+→ seen.add(3)
+```
+
+Read `4`:
+
+```text
+4 not seen
+→ seen.add(4)
+```
+
+Read second `4`:
+
+```text
+4 already seen
+→ duplicates.add(4)
+```
+
+Final:
+
+```text
+duplicates = {2, 4}
+```
+
+Convert to array:
+
+```text
+[2, 4]
+```
+
+---
+
+# 🔥🔥🔥 Why use two Sets?
+
+Because we need to remember:
+
+```text
+Have I seen this before?
+```
+
+and:
+
+```text
+Which values were duplicates?
+```
+
+So:
+
+```text
+seen
+→ remembers everything we've encountered
+
+duplicates
+→ stores repeated values
+```
+
+---
+
+# 🔥🔥🔥 Tricky case — Value appears 3 times
+
+```js
+[1, 2, 2, 2, 3];
+```
+
+Duplicate elements should be:
+
+```text
+[2]
+```
+
+NOT:
+
+```text
+[2, 2]
+```
+
+That's why we use:
+
+```js
+const duplicates = new Set();
+```
+
+A Set automatically keeps `2` only once.
+
+---
+
+# 258. 🔥🔥🔥 Count frequency of elements
+
+Now we want:
+
+```js
+const numbers = [1, 2, 2, 3, 3, 3];
+```
+
+Frequency:
+
+```text
+1 → 1
+2 → 2
+3 → 3
+```
+
+---
+
+# 🔥 Method 1 — Object
+
+```js
+function countFrequency(numbers) {
+  const frequency = {};
+
+  for (let num of numbers) {
+    frequency[num] = (frequency[num] || 0) + 1;
+  }
+
+  return frequency;
+}
+
+console.log(countFrequency([1, 2, 2, 3, 3, 3]));
+```
+
+### Output
+
+```text
+{
+  1: 1,
+  2: 2,
+  3: 3
+}
+```
+
+---
+
+# 🧠 This is the same pattern from strings
+
+Earlier:
+
+```js
+for (let char of str) {
+  frequency[char] = (frequency[char] || 0) + 1;
+}
+```
+
+Now:
+
+```js
+for (let num of numbers) {
+  frequency[num] = (frequency[num] || 0) + 1;
+}
+```
+
+The only thing that changed is:
+
+```text
+character
+   ↓
+number
+```
+
+The pattern is exactly the same.
+
+---
+
+# 🔥🔥🔥 Dry Run
+
+Array:
+
+```text
+[1, 2, 2, 3, 3, 3]
+```
+
+Start:
+
+```text
+frequency = {}
+```
+
+Read `1`:
+
+```text
+frequency[1] = 0 + 1
+```
+
+Now:
+
+```text
+1 → 1
+```
+
+Read `2`:
+
+```text
+2 → 1
+```
+
+Read second `2`:
+
+```text
+2 → 2
+```
+
+Read first `3`:
+
+```text
+3 → 1
+```
+
+Read second `3`:
+
+```text
+3 → 2
+```
+
+Read third `3`:
+
+```text
+3 → 3
+```
+
+Final:
+
+```text
+1 → 1
+2 → 2
+3 → 3
+```
+
+---
+
+# 🔥🔥 Method 2 — `Map`
+
+You can also use `Map`:
+
+```js
+function countFrequency(numbers) {
+  const frequency = new Map();
+
+  for (let num of numbers) {
+    frequency.set(num, (frequency.get(num) || 0) + 1);
+  }
+
+  return frequency;
+}
+
+console.log(countFrequency([1, 2, 2, 3, 3, 3]));
+```
+
+Conceptually:
+
+```text
+Map {
+  1 → 1,
+  2 → 2,
+  3 → 3
+}
+```
+
+For interviews, learn both Object and Map, but the object pattern is very easy to remember.
+
+---
+
+# 🔥🔥🔥 6 Problems — Don't Mix Them Up
+
+Take this array:
+
+```text
+[1, 2, 2, 3, 4, 4, 5]
+```
+
+Now understand the difference.
+
+---
+
+## Largest
+
+Question:
+
+> What is the biggest number?
+
+Answer:
+
+```text
+5
+```
+
+---
+
+## Smallest
+
+Question:
+
+> What is the smallest number?
+
+Answer:
+
+```text
+1
+```
+
+---
+
+## Second-largest
+
+Question:
+
+> What is the second biggest distinct number?
+
+Answer:
+
+```text
+4
+```
+
+---
+
+## Remove duplicates
+
+Question:
+
+> Give me the array with each value only once.
+
+Answer:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+## Find duplicates
+
+Question:
+
+> Which values appear more than once?
+
+Answer:
+
+```text
+[2, 4]
+```
+
+---
+
+## Count frequency
+
+Question:
+
+> How many times does each value appear?
+
+Answer:
+
+```text
+1 → 1
+2 → 2
+3 → 1
+4 → 2
+5 → 1
+```
+
+---
+
+# 🔥🔥🔥 Very Important Pattern Recognition
+
+You should start recognizing the question immediately.
+
+### "Largest"
+
+Think:
+
+```text
+largest = first element
+
+if current > largest
+    update
+```
+
+---
+
+### "Smallest"
+
+Think:
+
+```text
+smallest = first element
+
+if current < smallest
+    update
+```
+
+---
+
+### "Second-largest"
+
+Think:
+
+```text
+largest
+secondLargest
+
+If new largest:
+    old largest → secondLargest
+    new number → largest
+```
+
+---
+
+### "Remove duplicates"
+
+Think:
+
+```text
+Set
+```
+
+or:
+
+```text
+seen
+```
+
+---
+
+### "Find duplicates"
+
+Think:
+
+```text
+frequency > 1
+```
+
+or:
+
+```text
+seen + duplicates
+```
+
+---
+
+### "Count frequency"
+
+Think:
+
+```text
+value → count
+```
+
+Pattern:
+
+```js
+const frequency = {};
+
+for (let item of array) {
+  frequency[item] = (frequency[item] || 0) + 1;
+}
+```
+
+---
+
+# 🔥🔥🔥 Important Tricky Question
+
+Predict:
+
+```js
+const numbers = [5, 5, 5, 10, 10, 20];
+
+const frequency = {};
+
+for (let num of numbers) {
+  frequency[num] = (frequency[num] || 0) + 1;
+}
+
+console.log(frequency);
+```
+
+Output:
+
+```text
+{
+  5: 3,
+  10: 2,
+  20: 1
+}
+```
+
+So:
+
+```text
+largest       → 20
+smallest      → 5
+second-largest → 10
+duplicates    → [5, 10]
+```
+
+Remove duplicates:
+
+```text
+[5, 10, 20]
+```
+
+---
+
+# 🔥🔥🔥 Another Important Question
+
+Predict:
+
+```js
+const numbers = [-10, -20, -5, -30];
+
+let largest = numbers[0];
+let smallest = numbers[0];
+
+for (let i = 1; i < numbers.length; i++) {
+  if (numbers[i] > largest) {
+    largest = numbers[i];
+  }
+
+  if (numbers[i] < smallest) {
+    smallest = numbers[i];
+  }
+}
+
+console.log(largest);
+console.log(smallest);
+```
+
+### Output
+
+```text
+-5
+-30
+```
+
+This is why initializing with the first element is important.
+
+---
+
+# 🔥🔥🔥 One More Tricky Question
+
+```js
+const numbers = [10, 20, 5, 20, 15];
+
+const unique = [...new Set(numbers)];
+
+unique.sort((a, b) => b - a);
+
+console.log(unique);
+console.log(unique[1]);
+```
+
+### Output
+
+```text
+[20, 15, 10, 5]
+15
+```
+
+Step-by-step:
+
+```text
+Original
+[10,20,5,20,15]
+
+       ↓ Set
+
+[10,20,5,15]
+
+       ↓ sort descending
+
+[20,15,10,5]
+
+       ↓ index 1
+
+15
+```
+
+---
+
+# 🔥🔥🔥 Complexity
+
+## Largest
+
+```text
+Time:  O(n)
+Space: O(1)
+```
+
+## Smallest
+
+```text
+Time:  O(n)
+Space: O(1)
+```
+
+## Second-largest — one loop
+
+```text
+Time:  O(n)
+Space: O(1)
+```
+
+## Remove duplicates — Set
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+## Find duplicates — Set
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+## Frequency
+
+```text
+Time:  O(n)
+Space: O(k)
+```
+
+where `k` is the number of unique elements.
+
+---
+
+# 🧠 FINAL CHEAT SHEET
+
+```text
+Array:
+[1, 2, 2, 3, 4, 4, 5]
+```
+
+```text
+Largest
+→ 5
+
+Smallest
+→ 1
+
+Second-largest
+→ 4
+
+Remove duplicates
+→ [1, 2, 3, 4, 5]
+
+Find duplicates
+→ [2, 4]
+
+Frequency
+→ {
+    1: 1,
+    2: 2,
+    3: 1,
+    4: 2,
+    5: 1
+  }
+```
+
+# 🔥🔥🔥 Patterns You Should Memorize
+
+### Largest
+
+```js
+let largest = numbers[0];
+
+for (let num of numbers) {
+  if (num > largest) {
+    largest = num;
+  }
+}
+```
+
+### Smallest
+
+```js
+let smallest = numbers[0];
+
+for (let num of numbers) {
+  if (num < smallest) {
+    smallest = num;
+  }
+}
+```
+
+### Frequency
+
+```js
+const frequency = {};
+
+for (let num of numbers) {
+  frequency[num] = (frequency[num] || 0) + 1;
+}
+```
+
+### Remove duplicates
+
+```js
+const result = [...new Set(numbers)];
+```
+
+### Find duplicates
+
+```js
+const seen = new Set();
+const duplicates = new Set();
+
+for (let num of numbers) {
+  if (seen.has(num)) {
+    duplicates.add(num);
+  } else {
+    seen.add(num);
+  }
+}
+```
+
+### 🧠 One-Line Memory Trick
+
+```text
+Largest          → biggest
+Smallest         → smallest
+Second-largest   → keep top 2
+Remove duplicates → Set
+Find duplicates  → seen + Set
+Frequency        → value → count
+```
+
+The **biggest pattern to understand here** is that `frequency` and `Set` solve a huge number of interview problems:
+
+```text
+frequency
+→ "How many times?"
+
+Set
+→ "Have I seen this before?"
+```
+
+Once these two ideas become automatic, many array questions that initially look tricky become much easier.
+
+<!-- ================================= -->
+
+# 17. Important Array Coding Questions ⭐⭐⭐
+
+Aaj ke questions:
+
+```text
+1. Find missing number
+2. Find intersection of two arrays
+3. Find union of two arrays
+4. Find common elements
+5. Flatten a nested array
+```
+
+Sabse pehle ek important difference samjho:
+
+```text
+Intersection → dono arrays mein kya common hai?
+
+Union        → dono arrays ke saare unique elements
+
+Common       → usually same idea as intersection,
+               but frequency/duplicates ka requirement
+               question ke according change ho sakta hai.
+
+Missing      → expected sequence mein kaunsa number nahi hai?
+
+Flatten      → nested arrays ko simple one-dimensional array banana.
+```
+
+---
+
+# 1. 🔥🔥 Find missing number
+
+## What is the question asking?
+
+Suppose:
+
+```js
+const numbers = [1, 2, 3, 5];
+```
+
+Expected numbers are:
+
+```text
+1 2 3 4 5
+```
+
+But:
+
+```text
+4
+```
+
+missing hai.
+
+So answer:
+
+```text
+4
+```
+
+---
+
+# 🔥🔥 Method 1 — Simple approach using a loop
+
+Assume array contains numbers from `1` to `n`, with exactly one number missing.
+
+```js
+function findMissingNumber(numbers) {
+  const n = numbers.length + 1;
+
+  for (let i = 1; i <= n; i++) {
+    if (!numbers.includes(i)) {
+      return i;
+    }
+  }
+
+  return null;
+}
+
+console.log(findMissingNumber([1, 2, 3, 5]));
+```
+
+### Output
+
+```text
+4
+```
+
+This is easy to understand, but `includes()` inside a loop makes it slower.
+
+---
+
+# 🔥🔥🔥 Method 2 — Sum formula
+
+This is a very common interview solution.
+
+The sum of numbers from `1` to `n` is:
+
+```text
+n × (n + 1)
+───────────
+     2
+```
+
+For:
+
+```text
+1 + 2 + 3 + 4 + 5
+```
+
+we get:
+
+```text
+5 × 6
+───── = 15
+  2
+```
+
+Actual array:
+
+```text
+1 + 2 + 3 + 5 = 11
+```
+
+Difference:
+
+```text
+15 - 11 = 4
+```
+
+So missing number is `4`.
+
+---
+
+## Code
+
+```js
+function findMissingNumber(numbers) {
+  const n = numbers.length + 1;
+
+  const expectedSum = (n * (n + 1)) / 2;
+
+  let actualSum = 0;
+
+  for (let num of numbers) {
+    actualSum += num;
+  }
+
+  return expectedSum - actualSum;
+}
+
+console.log(findMissingNumber([1, 2, 3, 5]));
+```
+
+### Output
+
+```text
+4
+```
+
+---
+
+# 🧠 Dry Run
+
+Array:
+
+```text
+[1, 2, 3, 5]
+```
+
+Length:
+
+```text
+4
+```
+
+One number is missing, so:
+
+```text
+n = 5
+```
+
+Expected sum:
+
+```text
+5 × 6 / 2
+= 15
+```
+
+Actual sum:
+
+```text
+1 + 2 + 3 + 5
+= 11
+```
+
+Difference:
+
+```text
+15 - 11
+= 4
+```
+
+Answer:
+
+```text
+4
+```
+
+---
+
+# 🔥🔥🔥 Why `numbers.length + 1`?
+
+This is important.
+
+If:
+
+```text
+[1, 2, 3, 5]
+```
+
+length is:
+
+```text
+4
+```
+
+But the complete sequence has:
+
+```text
+5
+```
+
+numbers.
+
+So:
+
+```js
+const n = numbers.length + 1;
+```
+
+---
+
+# 🔥🔥🔥 Another example
+
+```js
+console.log(findMissingNumber([1, 2, 4, 5]));
+```
+
+Expected:
+
+```text
+1 2 3 4 5
+```
+
+Actual:
+
+```text
+1 2 4 5
+```
+
+Missing:
+
+```text
+3
+```
+
+Output:
+
+```text
+3
+```
+
+---
+
+# 🔥🔥🔥 Important assumption
+
+The sum solution assumes something like:
+
+```text
+1, 2, 3, ..., n
+```
+
+with **exactly one number missing**.
+
+For example:
+
+```text
+[1, 2, 3, 5]
+```
+
+works.
+
+But if the question is:
+
+```text
+[10, 11, 12, 14]
+```
+
+then the expected range needs to be clearly defined.
+
+Always understand the problem's assumptions before coding.
+
+---
+
+# 🔥🔥🔥 Method 3 — XOR
+
+You may see an advanced interview solution:
+
+```js
+function findMissingNumber(numbers) {
+  const n = numbers.length + 1;
+
+  let result = 0;
+
+  for (let i = 1; i <= n; i++) {
+    result ^= i;
+  }
+
+  for (let num of numbers) {
+    result ^= num;
+  }
+
+  return result;
+}
+```
+
+This uses the XOR property:
+
+```text
+x ^ x = 0
+x ^ 0 = x
+```
+
+So matching numbers cancel each other.
+
+For your current level, **understand the sum approach first**. Learn XOR as an optimization/interview variation.
+
+---
+
+# 🔥🔥🔥 Complexity
+
+Sum approach:
+
+```text
+Time:  O(n)
+Space: O(1)
+```
+
+Very good.
+
+---
+
+# 2. 🔥🔥 Find intersection of two arrays
+
+## What is intersection?
+
+Intersection means:
+
+> **Elements that exist in both arrays.**
+
+Example:
+
+```js
+const arr1 = [1, 2, 3, 4];
+const arr2 = [3, 4, 5, 6];
+```
+
+Common values:
+
+```text
+3
+4
+```
+
+Therefore:
+
+```text
+[3, 4]
+```
+
+---
+
+# 🔥🔥 Method 1 — Using `Set`
+
+```js
+function intersection(arr1, arr2) {
+  const set2 = new Set(arr2);
+
+  return arr1.filter((num) => set2.has(num));
+}
+
+console.log(intersection([1, 2, 3, 4], [3, 4, 5, 6]));
+```
+
+### Output
+
+```text
+[3, 4]
+```
+
+---
+
+# 🧠 Understand it
+
+Second array:
+
+```text
+[3, 4, 5, 6]
+```
+
+Convert to Set:
+
+```text
+Set { 3, 4, 5, 6 }
+```
+
+Now go through first array:
+
+```text
+1 → Is 1 in set? No
+2 → Is 2 in set? No
+3 → Is 3 in set? Yes
+4 → Is 4 in set? Yes
+```
+
+So:
+
+```text
+[3, 4]
+```
+
+---
+
+# 🔥🔥🔥 Duplicate values — important
+
+Suppose:
+
+```js
+const arr1 = [1, 2, 2, 3];
+const arr2 = [2, 2, 4];
+```
+
+The above solution gives:
+
+```text
+[2, 2]
+```
+
+because `arr1` contains `2` twice.
+
+But sometimes an interviewer means:
+
+> Return unique intersection.
+
+Then we want:
+
+```text
+[2]
+```
+
+Use:
+
+```js
+function intersection(arr1, arr2) {
+  const set2 = new Set(arr2);
+  const result = new Set();
+
+  for (let num of arr1) {
+    if (set2.has(num)) {
+      result.add(num);
+    }
+  }
+
+  return [...result];
+}
+```
+
+Output:
+
+```text
+[2]
+```
+
+---
+
+# 🧠 Important distinction
+
+When interviewer says:
+
+> Find intersection of two arrays
+
+ask/understand whether duplicates matter.
+
+### Unique intersection
+
+```text
+[1, 2, 2, 3]
+[2, 2, 4]
+
+→ [2]
+```
+
+### Intersection preserving occurrences
+
+```text
+[1, 2, 2, 3]
+[2, 2, 4]
+
+→ [2, 2]
+```
+
+These are slightly different problems.
+
+---
+
+# 3. 🔥🔥 Find union of two arrays
+
+## What is union?
+
+Union means:
+
+> Take elements from **both arrays**, but keep each value only once.
+
+Example:
+
+```js
+const arr1 = [1, 2, 3];
+const arr2 = [3, 4, 5];
+```
+
+Combine:
+
+```text
+1 2 3 3 4 5
+```
+
+Remove duplicates:
+
+```text
+1 2 3 4 5
+```
+
+Answer:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🔥🔥 Easiest solution — `Set`
+
+```js
+function union(arr1, arr2) {
+  return [...new Set([...arr1, ...arr2])];
+}
+
+console.log(union([1, 2, 3], [3, 4, 5]));
+```
+
+### Output
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🧠 Understand the steps
+
+First:
+
+```js
+[...arr1, ...arr2];
+```
+
+combines them:
+
+```text
+[1, 2, 3, 3, 4, 5]
+```
+
+Then:
+
+```js
+new Set(...)
+```
+
+removes duplicates:
+
+```text
+Set { 1, 2, 3, 4, 5 }
+```
+
+Then:
+
+```js
+[...new Set(...)]
+```
+
+converts it back to an array:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🔥🔥🔥 Intersection vs Union
+
+This is extremely important.
+
+Suppose:
+
+```text
+A = [1, 2, 3, 4]
+B = [3, 4, 5, 6]
+```
+
+### Intersection
+
+Only what exists in **both**:
+
+```text
+[3, 4]
+```
+
+### Union
+
+Everything from both, without duplicates:
+
+```text
+[1, 2, 3, 4, 5, 6]
+```
+
+Think:
+
+```text
+Intersection → AND
+Union        → OR
+```
+
+This is a very useful memory trick.
+
+---
+
+# 4. 🔥🔥 Find common elements
+
+At first this looks exactly like intersection.
+
+And in many interview questions:
+
+> "Find common elements between two arrays"
+
+means the same thing:
+
+```text
+Intersection
+```
+
+Example:
+
+```js
+const arr1 = [1, 2, 3, 4];
+const arr2 = [3, 4, 5, 6];
+```
+
+Common:
+
+```text
+[3, 4]
+```
+
+---
+
+# 🔥🔥 Simple solution
+
+```js
+function findCommon(arr1, arr2) {
+  return arr1.filter((num) => arr2.includes(num));
+}
+
+console.log(findCommon([1, 2, 3, 4], [3, 4, 5, 6]));
+```
+
+### Output
+
+```text
+[3, 4]
+```
+
+---
+
+# 🧠 How does it work?
+
+`filter()` checks every element of `arr1`.
+
+For:
+
+```text
+[1, 2, 3, 4]
+```
+
+### `1`
+
+```js
+arr2.includes(1);
+```
+
+false → remove.
+
+### `2`
+
+```js
+arr2.includes(2);
+```
+
+false → remove.
+
+### `3`
+
+```js
+arr2.includes(3);
+```
+
+true → keep.
+
+### `4`
+
+```js
+arr2.includes(4);
+```
+
+true → keep.
+
+Result:
+
+```text
+[3, 4]
+```
+
+---
+
+# 🔥🔥🔥 `includes()` vs `indexOf()`
+
+You may also see:
+
+```js
+arr2.indexOf(num) !== -1;
+```
+
+instead of:
+
+```js
+arr2.includes(num);
+```
+
+Both mean:
+
+> Does this value exist in the array?
+
+Modern JavaScript:
+
+```js
+arr2.includes(num);
+```
+
+is easier to read.
+
+---
+
+# 🔥🔥🔥 Unique common elements
+
+Suppose:
+
+```text
+arr1 = [1, 2, 2, 3]
+arr2 = [2, 2, 4]
+```
+
+If we use:
+
+```js
+arr1.filter((num) => arr2.includes(num));
+```
+
+we get:
+
+```text
+[2, 2]
+```
+
+If we want unique values:
+
+```js
+function findCommon(arr1, arr2) {
+  const set2 = new Set(arr2);
+  const result = new Set();
+
+  for (let num of arr1) {
+    if (set2.has(num)) {
+      result.add(num);
+    }
+  }
+
+  return [...result];
+}
+```
+
+Output:
+
+```text
+[2]
+```
+
+---
+
+# 🔥🔥🔥 Intersection vs Common Elements
+
+Usually:
+
+```text
+Intersection = Common elements
+```
+
+But interviewers can add conditions such as:
+
+```text
+"Find unique common elements"
+"Find common elements including duplicates"
+"Find common elements with the same frequency"
+```
+
+So always pay attention to the exact wording.
+
+---
+
+# 5. 🔥🔥 Flatten a nested array
+
+This one can look scary at first, but the idea is simple.
+
+## What is a nested array?
+
+An array inside another array.
+
+Example:
+
+```js
+const numbers = [1, [2, 3], [4, 5]];
+```
+
+This is nested because:
+
+```text
+1
+[2, 3]
+[4, 5]
+```
+
+are inside the main array.
+
+We want:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+This process is called:
+
+> **Flattening an array.**
+
+---
+
+# 🔥🔥 Method 1 — `flat()`
+
+JavaScript provides:
+
+```js
+.flat()
+```
+
+Example:
+
+```js
+const numbers = [1, [2, 3], [4, 5]];
+
+console.log(numbers.flat());
+```
+
+Output:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🧠 What does `flat()` do?
+
+It removes one level of nesting.
+
+Example:
+
+```text
+[1, [2, 3], [4, 5]]
+```
+
+becomes:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🔥🔥🔥 What if nesting is deeper?
+
+Consider:
+
+```js
+const numbers = [1, [2, [3, [4]]]];
+```
+
+One `flat()`:
+
+```js
+console.log(numbers.flat());
+```
+
+gives:
+
+```text
+[1, 2, [3, [4]]]
+```
+
+Why?
+
+Because default `flat()` depth is:
+
+```text
+1
+```
+
+---
+
+# 🔥🔥🔥 Flatten everything
+
+Use:
+
+```js
+console.log(numbers.flat(Infinity));
+```
+
+For:
+
+```text
+[1, [2, [3, [4]]]]
+```
+
+output:
+
+```text
+[1, 2, 3, 4]
+```
+
+So:
+
+```text
+flat()
+→ one level
+
+flat(2)
+→ two levels
+
+flat(Infinity)
+→ all levels
+```
+
+---
+
+# 🔥🔥 Method 2 — Without `flat()`
+
+This is more important if interviewer says:
+
+> "Don't use built-in `flat()`."
+
+We can use recursion.
+
+```js
+function flattenArray(arr) {
+  const result = [];
+
+  for (let item of arr) {
+    if (Array.isArray(item)) {
+      result.push(...flattenArray(item));
+    } else {
+      result.push(item);
+    }
+  }
+
+  return result;
+}
+
+console.log(flattenArray([1, [2, [3, 4]], 5]));
+```
+
+### Output
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🧠 This looks scary — let's break it down
+
+The key question is:
+
+```js
+Array.isArray(item);
+```
+
+It asks:
+
+> Is this item an array?
+
+For:
+
+```text
+1
+```
+
+answer:
+
+```text
+false
+```
+
+So:
+
+```js
+result.push(1);
+```
+
+For:
+
+```text
+[2, [3, 4]]
+```
+
+answer:
+
+```text
+true
+```
+
+So we call the same function again:
+
+```js
+flattenArray([2, [3, 4]]);
+```
+
+This is called **recursion**.
+
+---
+
+# 🧠 Recursion in simple language
+
+Recursion means:
+
+> A function calls itself to solve a smaller version of the same problem.
+
+Here:
+
+```js
+flattenArray();
+```
+
+can receive:
+
+```text
+[1, [2, [3, 4]], 5]
+```
+
+When it finds:
+
+```text
+[2, [3, 4]]
+```
+
+it says:
+
+> "This is another array. I'll flatten that too."
+
+So:
+
+```text
+flattenArray
+    ↓
+find nested array
+    ↓
+flattenArray again
+    ↓
+find another nested array
+    ↓
+flattenArray again
+```
+
+Eventually there are no nested arrays left.
+
+---
+
+# 🔥🔥🔥 Dry Run
+
+Input:
+
+```text
+[1, [2, [3, 4]], 5]
+```
+
+Start:
+
+```text
+result = []
+```
+
+### `1`
+
+Not an array:
+
+```text
+result = [1]
+```
+
+### `[2, [3, 4]]`
+
+It is an array.
+
+Call:
+
+```text
+flattenArray([2, [3, 4]])
+```
+
+Inside:
+
+```text
+2 → not array → [2]
+```
+
+Then:
+
+```text
+[3, 4] → array
+```
+
+Call again:
+
+```text
+flattenArray([3, 4])
+```
+
+Now:
+
+```text
+3 → [3]
+4 → [3, 4]
+```
+
+Returns:
+
+```text
+[3, 4]
+```
+
+Then previous level becomes:
+
+```text
+[2, 3, 4]
+```
+
+Return that.
+
+Original level becomes:
+
+```text
+[1, 2, 3, 4]
+```
+
+Finally:
+
+```text
+5 → [1, 2, 3, 4, 5]
+```
+
+Final answer:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🔥🔥🔥 Understand `...` here
+
+This line:
+
+```js
+result.push(...flattenArray(item));
+```
+
+Suppose:
+
+```js
+flattenArray(item);
+```
+
+returns:
+
+```text
+[2, 3, 4]
+```
+
+Then:
+
+```js
+result.push(...[2, 3, 4]);
+```
+
+is effectively:
+
+```js
+result.push(2, 3, 4);
+```
+
+So all elements are added individually.
+
+Without `...`:
+
+```js
+result.push([2, 3, 4]);
+```
+
+we would get a nested array again:
+
+```text
+[1, [2, 3, 4]]
+```
+
+which is not what we want.
+
+---
+
+# 🔥🔥🔥 Another flatten example
+
+Input:
+
+```js
+const arr = [1, [2, 3], [4, [5, 6]], 7];
+```
+
+Using:
+
+```js
+console.log(arr.flat(Infinity));
+```
+
+Output:
+
+```text
+[1, 2, 3, 4, 5, 6, 7]
+```
+
+---
+
+# 🔥🔥🔥 Predict the output
+
+```js
+const arr = [1, [2, 3], [4, [5]]];
+
+console.log(arr.flat());
+```
+
+Remember:
+
+```text
+flat()
+→ depth 1
+```
+
+So output is:
+
+```text
+[1, 2, 3, 4, [5]]
+```
+
+NOT:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+To flatten everything:
+
+```js
+console.log(arr.flat(Infinity));
+```
+
+Output:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+---
+
+# 🔥🔥🔥 Very Important — `flat()` does NOT mutate the original array
+
+Example:
+
+```js
+const arr = [1, [2, 3]];
+
+const result = arr.flat();
+
+console.log(arr);
+console.log(result);
+```
+
+Output:
+
+```text
+[1, [2, 3]]
+[1, 2, 3]
+```
+
+The original array remains nested.
+
+---
+
+# 🧠 Now Compare All 5 Questions
+
+Suppose:
+
+```text
+A = [1, 2, 3, 4]
+B = [3, 4, 5, 6]
+```
+
+### Missing number
+
+```text
+[1, 2, 3, 5]
+
+→ 4
+```
+
+Think:
+
+```text
+Expected sequence
+minus
+actual values
+```
+
+---
+
+### Intersection
+
+```text
+A = [1,2,3,4]
+B = [3,4,5,6]
+
+→ [3,4]
+```
+
+Think:
+
+```text
+What exists in BOTH?
+```
+
+---
+
+### Union
+
+```text
+A = [1,2,3,4]
+B = [3,4,5,6]
+
+→ [1,2,3,4,5,6]
+```
+
+Think:
+
+```text
+Everything from BOTH,
+without duplicates.
+```
+
+---
+
+### Common elements
+
+Usually:
+
+```text
+→ [3,4]
+```
+
+Think:
+
+```text
+What appears in both?
+```
+
+---
+
+### Flatten
+
+```text
+[1,[2,[3,4]]]
+
+→ [1,2,3,4]
+```
+
+Think:
+
+```text
+Remove array nesting.
+```
+
+---
+
+# 🔥🔥🔥 Pattern Recognition
+
+When interviewer says:
+
+### "Missing number"
+
+Think:
+
+```text
+Expected sum - actual sum
+```
+
+```js
+const n = numbers.length + 1;
+const expected = (n * (n + 1)) / 2;
+```
+
+---
+
+### "Intersection"
+
+Think:
+
+```text
+B → Set
+
+A.filter(x => setB.has(x))
+```
+
+---
+
+### "Union"
+
+Think:
+
+```text
+[...new Set([...A, ...B])]
+```
+
+---
+
+### "Common elements"
+
+Think:
+
+```text
+Intersection
+```
+
+unless duplicates/frequency are specifically mentioned.
+
+---
+
+### "Flatten"
+
+Think:
+
+```text
+flat()
+```
+
+or, if built-in is not allowed:
+
+```text
+recursion + Array.isArray()
+```
+
+---
+
+# 🔥🔥🔥 Complexity
+
+### Missing number — sum
+
+```text
+Time:  O(n)
+Space: O(1)
+```
+
+### Intersection — Set
+
+```text
+Time:  O(n + m)
+Space: O(m)
+```
+
+where `n` and `m` are the two array lengths.
+
+### Union — Set
+
+```text
+Time:  O(n + m)
+Space: O(n + m)
+```
+
+### Common elements
+
+Using `includes()`:
+
+```text
+Time: O(n × m)
+```
+
+Using Set:
+
+```text
+Time: O(n + m)
+```
+
+So Set is generally better for large arrays.
+
+### Flatten
+
+Depends on total number of elements, but generally:
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+for a fully flattened result.
+
+---
+
+# 🧠 FINAL CHEAT SHEET
+
+```text
+MISSING NUMBER
+
+[1,2,3,5]
+      ↓
+Expected: 1,2,3,4,5
+      ↓
+Missing: 4
+```
+
+```text
+INTERSECTION
+
+[1,2,3,4]
+[3,4,5,6]
+
+      ↓
+
+[3,4]
+```
+
+```text
+UNION
+
+[1,2,3,4]
+[3,4,5,6]
+
+      ↓
+
+[1,2,3,4,5,6]
+```
+
+```text
+COMMON
+
+[1,2,3,4]
+[3,4,5,6]
+
+      ↓
+
+[3,4]
+```
+
+```text
+FLATTEN
+
+[1,[2,[3,4]]]
+
+      ↓
+
+[1,2,3,4]
+```
+
+---
+
+# 🔥🔥🔥 Most Important Things to Remember
+
+```text
+Set
+→ unique values
+```
+
+```text
+includes()
+→ does this value exist?
+```
+
+```text
+filter()
+→ keep elements that satisfy a condition
+```
+
+```text
+flat()
+→ remove array nesting
+```
+
+```text
+Array.isArray()
+→ is this value an array?
+```
+
+```text
+Recursion
+→ function solves a smaller version of itself
+```
+
+And the biggest mental distinction:
+
+```text
+Intersection → BOTH
+
+Union        → EVERYTHING
+
+Missing      → EXPECTED - ACTUAL
+
+Flatten      → REMOVE NESTING
+```
+
+<!-- ================================== -->

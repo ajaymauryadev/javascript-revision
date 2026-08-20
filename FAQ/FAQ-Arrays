@@ -3702,3 +3702,2101 @@ Flatten      → REMOVE NESTING
 ```
 
 <!-- ================================== -->
+
+# 18. Important Array Coding Questions ⭐⭐⭐
+
+Aaj ke questions:
+
+```text
+1. Chunk an array into smaller arrays
+2. Rotate an array
+3. Move all zeros to the end
+4. Find pairs whose sum equals a target
+5. Sort an array of objects
+6. Group objects by a property
+```
+
+In questions mein kuch naye patterns aayenge:
+
+```text
+slice()
+two pointers
+Set / Map
+sort()
+reduce()
+```
+
+In patterns ko achhe se samajhna important hai.
+
+---
+
+# 1. 🔥🔥 Chunk an array into smaller arrays
+
+## What does "chunk" mean?
+
+Suppose we have:
+
+```js
+const numbers = [1, 2, 3, 4, 5, 6, 7];
+```
+
+Aur humein array ko groups mein todna hai, jisme har group mein maximum `3` elements hon.
+
+Result:
+
+```text
+[1, 2, 3]
+[4, 5, 6]
+[7]
+```
+
+So:
+
+```js
+[[1, 2, 3], [4, 5, 6], [7]];
+```
+
+This is called **chunking an array**.
+
+---
+
+# 🔥🔥 Simple solution
+
+```js
+function chunkArray(arr, size) {
+  const result = [];
+
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+
+  return result;
+}
+
+console.log(chunkArray([1, 2, 3, 4, 5, 6, 7], 3));
+```
+
+### Output
+
+```text
+[
+  [1, 2, 3],
+  [4, 5, 6],
+  [7]
+]
+```
+
+---
+
+# 🧠 Understand this carefully
+
+The important line is:
+
+```js
+for (let i = 0; i < arr.length; i += size)
+```
+
+Suppose:
+
+```text
+size = 3
+```
+
+Then `i` will be:
+
+```text
+0
+3
+6
+```
+
+So we take:
+
+```js
+arr.slice(0, 3);
+```
+
+which gives:
+
+```text
+[1, 2, 3]
+```
+
+Then:
+
+```js
+arr.slice(3, 6);
+```
+
+gives:
+
+```text
+[4, 5, 6]
+```
+
+Then:
+
+```js
+arr.slice(6, 9);
+```
+
+There are only 7 elements, so JavaScript simply gives:
+
+```text
+[7]
+```
+
+---
+
+# 🔥🔥🔥 Why `i += size`?
+
+This is the main idea.
+
+If:
+
+```text
+size = 3
+```
+
+we don't want:
+
+```text
+0
+1
+2
+3
+4
+5
+```
+
+We want to jump by 3:
+
+```text
+0 → 3 → 6
+```
+
+That's why:
+
+```js
+i += size;
+```
+
+---
+
+# 🔥🔥 What does `slice(i, i + size)` do?
+
+Remember:
+
+```js
+arr.slice(start, end);
+```
+
+doesn't include `end`.
+
+Example:
+
+```js
+[1, 2, 3, 4, 5].slice(0, 3);
+```
+
+gives:
+
+```text
+[1, 2, 3]
+```
+
+So:
+
+```js
+arr.slice(i, i + size);
+```
+
+means:
+
+> Start at `i` and take `size` elements.
+
+---
+
+# 🔥🔥🔥 Another example
+
+```js
+console.log(chunkArray([1, 2, 3, 4, 5], 2));
+```
+
+Output:
+
+```text
+[
+  [1, 2],
+  [3, 4],
+  [5]
+]
+```
+
+---
+
+# 🔥🔥🔥 Edge Case
+
+What if:
+
+```js
+chunkArray([1, 2, 3], 10);
+```
+
+Since the chunk size is bigger than the array:
+
+```text
+[1, 2, 3]
+```
+
+is returned as one chunk.
+
+---
+
+# 🧠 Pattern to remember
+
+Whenever you see:
+
+> Chunk an array
+
+think:
+
+```text
+for loop
+   ↓
+jump by chunk size
+   ↓
+slice(i, i + size)
+   ↓
+push into result
+```
+
+---
+
+# 2. 🔥🔥 Rotate an array
+
+This one is slightly tricky because **"rotate" can mean left or right**.
+
+Let's first understand right rotation.
+
+Suppose:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+Rotate right by `2`.
+
+The last two elements move to the beginning:
+
+```text
+[4, 5, 1, 2, 3]
+```
+
+---
+
+# 🔥🔥 Right rotation
+
+```js
+function rotateRight(arr, k) {
+  k = k % arr.length;
+
+  return arr.slice(-k).concat(arr.slice(0, -k));
+}
+
+console.log(rotateRight([1, 2, 3, 4, 5], 2));
+```
+
+### Output
+
+```text
+[4, 5, 1, 2, 3]
+```
+
+---
+
+# 🧠 Understand it
+
+Original:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+We want to rotate by `2`.
+
+Take last 2:
+
+```js
+arr.slice(-2);
+```
+
+gives:
+
+```text
+[4, 5]
+```
+
+Take everything before them:
+
+```js
+arr.slice(0, -2);
+```
+
+gives:
+
+```text
+[1, 2, 3]
+```
+
+Then:
+
+```js
+[4, 5].concat([1, 2, 3]);
+```
+
+gives:
+
+```text
+[4, 5, 1, 2, 3]
+```
+
+---
+
+# 🔥🔥🔥 Why `k % arr.length`?
+
+This is a very important trick.
+
+Suppose:
+
+```text
+array length = 5
+k = 7
+```
+
+Rotating 7 times is equivalent to rotating:
+
+```text
+7 % 5
+```
+
+which is:
+
+```text
+2
+```
+
+So:
+
+```js
+k = k % arr.length;
+```
+
+prevents unnecessary rotations.
+
+---
+
+# 🔥🔥 Left rotation
+
+Now suppose:
+
+```text
+[1, 2, 3, 4, 5]
+```
+
+rotate left by `2`.
+
+The first two move to the end:
+
+```text
+[3, 4, 5, 1, 2]
+```
+
+Code:
+
+```js
+function rotateLeft(arr, k) {
+  k = k % arr.length;
+
+  return arr.slice(k).concat(arr.slice(0, k));
+}
+
+console.log(rotateLeft([1, 2, 3, 4, 5], 2));
+```
+
+Output:
+
+```text
+[3, 4, 5, 1, 2]
+```
+
+---
+
+# 🧠 Right vs Left
+
+```text
+Original:
+
+[1, 2, 3, 4, 5]
+```
+
+Right by 2:
+
+```text
+[4, 5, 1, 2, 3]
+```
+
+Left by 2:
+
+```text
+[3, 4, 5, 1, 2]
+```
+
+Memory trick:
+
+```text
+Right → last elements come forward
+
+Left → first elements go backward
+```
+
+---
+
+# 🔥🔥🔥 Tricky case: k > array length
+
+```js
+rotateRight([1, 2, 3, 4, 5], 7);
+```
+
+First:
+
+```text
+7 % 5 = 2
+```
+
+So result is same as rotating by 2:
+
+```text
+[4, 5, 1, 2, 3]
+```
+
+---
+
+# 🔥🔥🔥 Tricky case: k = 0
+
+```js
+rotateRight([1, 2, 3], 0);
+```
+
+Result:
+
+```text
+[1, 2, 3]
+```
+
+---
+
+# 3. 🔥🔥 Move all zeros to the end
+
+Suppose:
+
+```js
+const numbers = [0, 1, 0, 3, 12];
+```
+
+We want:
+
+```text
+[1, 3, 12, 0, 0]
+```
+
+The important requirement usually is:
+
+> **Keep the order of non-zero elements unchanged.**
+
+Original non-zero elements:
+
+```text
+1 → 3 → 12
+```
+
+Result:
+
+```text
+1 → 3 → 12 → 0 → 0
+```
+
+---
+
+# 🔥🔥 Method 1 — Simple approach
+
+```js
+function moveZeros(numbers) {
+  const result = [];
+
+  let zeroCount = 0;
+
+  for (let num of numbers) {
+    if (num === 0) {
+      zeroCount++;
+    } else {
+      result.push(num);
+    }
+  }
+
+  while (zeroCount > 0) {
+    result.push(0);
+    zeroCount--;
+  }
+
+  return result;
+}
+
+console.log(moveZeros([0, 1, 0, 3, 12]));
+```
+
+### Output
+
+```text
+[1, 3, 12, 0, 0]
+```
+
+---
+
+# 🧠 Dry Run
+
+Start:
+
+```text
+result = []
+zeroCount = 0
+```
+
+Read `0`:
+
+```text
+zeroCount = 1
+```
+
+Read `1`:
+
+```text
+result = [1]
+```
+
+Read `0`:
+
+```text
+zeroCount = 2
+```
+
+Read `3`:
+
+```text
+result = [1, 3]
+```
+
+Read `12`:
+
+```text
+result = [1, 3, 12]
+```
+
+Now append two zeros:
+
+```text
+[1, 3, 12, 0, 0]
+```
+
+---
+
+# 🔥🔥🔥 Method 2 — In-place two-pointer approach
+
+This is more interview-friendly because we don't create another array.
+
+```js
+function moveZeros(numbers) {
+  let position = 0;
+
+  for (let i = 0; i < numbers.length; i++) {
+    if (numbers[i] !== 0) {
+      numbers[position] = numbers[i];
+      position++;
+    }
+  }
+
+  while (position < numbers.length) {
+    numbers[position] = 0;
+    position++;
+  }
+
+  return numbers;
+}
+
+console.log(moveZeros([0, 1, 0, 3, 12]));
+```
+
+### Output
+
+```text
+[1, 3, 12, 0, 0]
+```
+
+---
+
+# 🧠 Understand `position`
+
+`position` tells us:
+
+> Where should the next non-zero number go?
+
+Initially:
+
+```text
+position = 0
+```
+
+Read `0`:
+
+```text
+ignore
+```
+
+Read `1`:
+
+```text
+numbers[0] = 1
+position = 1
+```
+
+Read `0`:
+
+```text
+ignore
+```
+
+Read `3`:
+
+```text
+numbers[1] = 3
+position = 2
+```
+
+Read `12`:
+
+```text
+numbers[2] = 12
+position = 3
+```
+
+Now:
+
+```text
+[1, 3, 12, ?, ?]
+```
+
+Fill remaining positions with zero:
+
+```text
+[1, 3, 12, 0, 0]
+```
+
+---
+
+# 🔥🔥🔥 Why is this called two-pointer?
+
+We have:
+
+```text
+i
+```
+
+which scans the array.
+
+And:
+
+```text
+position
+```
+
+which tells us where to place the next non-zero element.
+
+So there are effectively two positions being tracked.
+
+---
+
+# 4. 🔥🔥 Find pairs whose sum equals a target
+
+This is a **very important interview pattern**.
+
+Suppose:
+
+```js
+const numbers = [2, 7, 11, 15];
+const target = 9;
+```
+
+We need to find two numbers whose sum is `9`.
+
+We have:
+
+```text
+2 + 7 = 9
+```
+
+So answer:
+
+```text
+[2, 7]
+```
+
+---
+
+# 🔥🔥 Method 1 — Brute force
+
+The easiest way to understand it:
+
+```js
+function findPairs(numbers, target) {
+  const result = [];
+
+  for (let i = 0; i < numbers.length; i++) {
+    for (let j = i + 1; j < numbers.length; j++) {
+      if (numbers[i] + numbers[j] === target) {
+        result.push([numbers[i], numbers[j]]);
+      }
+    }
+  }
+
+  return result;
+}
+
+console.log(findPairs([2, 7, 11, 15], 9));
+```
+
+### Output
+
+```text
+[[2, 7]]
+```
+
+---
+
+# 🧠 Why two loops?
+
+Because we need to compare:
+
+```text
+first number + every other number
+```
+
+Then:
+
+```text
+second number + every number after it
+```
+
+For:
+
+```text
+[2, 7, 11, 15]
+```
+
+we check:
+
+```text
+2 + 7  = 9 ✅
+2 + 11 = 13
+2 + 15 = 17
+
+7 + 11 = 18
+7 + 15 = 22
+
+11 + 15 = 26
+```
+
+Only:
+
+```text
+2 + 7
+```
+
+works.
+
+---
+
+# 🔥🔥🔥 Why `j = i + 1`?
+
+We don't want to compare a number with itself.
+
+Wrong:
+
+```js
+j = 0;
+```
+
+Better:
+
+```js
+j = i + 1;
+```
+
+This also prevents checking the same pair twice.
+
+For example:
+
+```text
+2 + 7
+```
+
+and later:
+
+```text
+7 + 2
+```
+
+are the same pair.
+
+We only need it once.
+
+---
+
+# 🔥🔥 Method 2 — `Set`
+
+We can solve it in one pass using a Set.
+
+```js
+function findPairs(numbers, target) {
+  const seen = new Set();
+  const result = [];
+
+  for (let num of numbers) {
+    const needed = target - num;
+
+    if (seen.has(needed)) {
+      result.push([needed, num]);
+    }
+
+    seen.add(num);
+  }
+
+  return result;
+}
+
+console.log(findPairs([2, 7, 11, 15], 9));
+```
+
+Output:
+
+```text
+[[2, 7]]
+```
+
+---
+
+# 🧠 This is VERY important
+
+Suppose:
+
+```text
+num = 7
+target = 9
+```
+
+We ask:
+
+> What number do I need to make 9?
+
+Calculate:
+
+```text
+target - num
+
+9 - 7
+= 2
+```
+
+So:
+
+```js
+const needed = target - num;
+```
+
+Then:
+
+```js
+seen.has(needed);
+```
+
+means:
+
+> Have I already seen the number I need?
+
+If yes:
+
+```text
+We found a pair!
+```
+
+---
+
+# 🔥🔥🔥 Dry Run
+
+Array:
+
+```text
+[2, 7, 11, 15]
+```
+
+Target:
+
+```text
+9
+```
+
+Initially:
+
+```text
+seen = {}
+```
+
+### `2`
+
+Needed:
+
+```text
+9 - 2 = 7
+```
+
+Have we seen `7`?
+
+```text
+No
+```
+
+Add `2`:
+
+```text
+seen = {2}
+```
+
+---
+
+### `7`
+
+Needed:
+
+```text
+9 - 7 = 2
+```
+
+Have we seen `2`?
+
+```text
+Yes!
+```
+
+So:
+
+```text
+[2, 7]
+```
+
+is a pair.
+
+Then add `7`.
+
+---
+
+### `11`
+
+Needed:
+
+```text
+9 - 11 = -2
+```
+
+Not seen.
+
+---
+
+### `15`
+
+Needed:
+
+```text
+9 - 15 = -6
+```
+
+Not seen.
+
+Final:
+
+```text
+[[2, 7]]
+```
+
+---
+
+# 🔥🔥🔥 Complexity
+
+Brute force:
+
+```text
+Time: O(n²)
+Space: O(1)
+```
+
+Set approach:
+
+```text
+Time: O(n)
+Space: O(n)
+```
+
+For interviews, the Set approach is much better when they ask:
+
+> Can you do it in O(n)?
+
+---
+
+# 5. 🔥🔥 Sort an array of objects
+
+This is very common in JavaScript interviews.
+
+Suppose:
+
+```js
+const users = [
+  { name: "Ajay", age: 25 },
+  { name: "Rahul", age: 30 },
+  { name: "Amit", age: 22 },
+];
+```
+
+We want to sort users by age.
+
+Expected:
+
+```text
+Amit   22
+Ajay   25
+Rahul  30
+```
+
+---
+
+# 🔥🔥 Sort by number
+
+```js
+const users = [
+  { name: "Ajay", age: 25 },
+  { name: "Rahul", age: 30 },
+  { name: "Amit", age: 22 },
+];
+
+users.sort((a, b) => a.age - b.age);
+
+console.log(users);
+```
+
+### Output
+
+```text
+[
+  { name: "Amit", age: 22 },
+  { name: "Ajay", age: 25 },
+  { name: "Rahul", age: 30 }
+]
+```
+
+---
+
+# 🧠 Understand `a` and `b`
+
+JavaScript's `sort()` gives the comparator two objects:
+
+```text
+a
+b
+```
+
+Suppose:
+
+```text
+a.age = 25
+b.age = 30
+```
+
+Then:
+
+```js
+a.age - b.age;
+```
+
+becomes:
+
+```text
+25 - 30 = -5
+```
+
+Negative means:
+
+```text
+a should come before b
+```
+
+---
+
+# 🔥🔥 Ascending vs descending
+
+### Ascending
+
+Small → large:
+
+```js
+users.sort((a, b) => a.age - b.age);
+```
+
+```text
+22
+25
+30
+```
+
+### Descending
+
+Large → small:
+
+```js
+users.sort((a, b) => b.age - a.age);
+```
+
+```text
+30
+25
+22
+```
+
+### Memory trick
+
+```text
+a - b
+→ ascending
+
+b - a
+→ descending
+```
+
+---
+
+# 🔥🔥 Sort objects by name
+
+```js
+const users = [
+  { name: "Rahul", age: 30 },
+  { name: "Ajay", age: 25 },
+  { name: "Amit", age: 22 },
+];
+
+users.sort((a, b) => a.name.localeCompare(b.name));
+
+console.log(users);
+```
+
+Output:
+
+```text
+[
+  { name: "Ajay", age: 25 },
+  { name: "Amit", age: 22 },
+  { name: "Rahul", age: 30 }
+]
+```
+
+---
+
+# 🧠 Why not `a.name - b.name`?
+
+Because names are strings.
+
+```text
+"Ajay" - "Amit"
+```
+
+doesn't make sense numerically.
+
+For strings, use:
+
+```js
+localeCompare();
+```
+
+So:
+
+```js
+a.name.localeCompare(b.name);
+```
+
+---
+
+# 🔥🔥🔥 Sort by salary
+
+```js
+const employees = [
+  { name: "A", salary: 50000 },
+  { name: "B", salary: 30000 },
+  { name: "C", salary: 70000 },
+];
+
+employees.sort((a, b) => a.salary - b.salary);
+
+console.log(employees);
+```
+
+Output:
+
+```text
+[
+  { name: "B", salary: 30000 },
+  { name: "A", salary: 50000 },
+  { name: "C", salary: 70000 }
+]
+```
+
+---
+
+# 🔥🔥🔥 Sort by nested property
+
+Suppose:
+
+```js
+const users = [
+  {
+    name: "Ajay",
+    address: {
+      city: "Delhi",
+    },
+  },
+  {
+    name: "Rahul",
+    address: {
+      city: "Mumbai",
+    },
+  },
+];
+```
+
+Sort by city:
+
+```js
+users.sort((a, b) => a.address.city.localeCompare(b.address.city));
+```
+
+---
+
+# 🔥🔥🔥 Important: `sort()` mutates the original array
+
+This is important.
+
+```js
+const numbers = [3, 1, 2];
+
+const result = numbers.sort((a, b) => a - b);
+
+console.log(numbers);
+console.log(result);
+```
+
+Both are:
+
+```text
+[1, 2, 3]
+```
+
+because `sort()` changes the original array.
+
+If you want a copy:
+
+```js
+const result = [...numbers].sort((a, b) => a - b);
+```
+
+---
+
+# 6. 🔥🔥 Group objects by a property
+
+This is another **very important interview pattern**.
+
+Suppose:
+
+```js
+const users = [
+  { name: "Ajay", department: "IT" },
+  { name: "Rahul", department: "HR" },
+  { name: "Amit", department: "IT" },
+  { name: "Priya", department: "HR" },
+];
+```
+
+We want to group them by `department`.
+
+Expected:
+
+```text
+{
+  IT: [
+    { name: "Ajay", department: "IT" },
+    { name: "Amit", department: "IT" }
+  ],
+
+  HR: [
+    { name: "Rahul", department: "HR" },
+    { name: "Priya", department: "HR" }
+  ]
+}
+```
+
+---
+
+# 🔥🔥 Method 1 — Using `reduce()`
+
+```js
+function groupBy(users, property) {
+  return users.reduce((groups, user) => {
+    const key = user[property];
+
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+
+    groups[key].push(user);
+
+    return groups;
+  }, {});
+}
+
+const users = [
+  { name: "Ajay", department: "IT" },
+  { name: "Rahul", department: "HR" },
+  { name: "Amit", department: "IT" },
+  { name: "Priya", department: "HR" },
+];
+
+console.log(groupBy(users, "department"));
+```
+
+---
+
+# 🧠 This looks difficult, so let's slow down
+
+The important idea is:
+
+```text
+property value
+      ↓
+becomes a key
+      ↓
+objects with same key go into same array
+```
+
+For example:
+
+```text
+Ajay → IT
+Amit → IT
+```
+
+Both go into:
+
+```text
+IT: []
+```
+
+Similarly:
+
+```text
+Rahul → HR
+Priya → HR
+```
+
+go into:
+
+```text
+HR: []
+```
+
+---
+
+# 🔥🔥 Step-by-step
+
+Initially:
+
+```text
+groups = {}
+```
+
+First object:
+
+```text
+{
+  name: "Ajay",
+  department: "IT"
+}
+```
+
+Get:
+
+```js
+const key = user[property];
+```
+
+Here:
+
+```text
+property = "department"
+```
+
+So:
+
+```text
+key = "IT"
+```
+
+Does:
+
+```text
+groups.IT
+```
+
+exist?
+
+No.
+
+So:
+
+```js
+groups[key] = [];
+```
+
+Now:
+
+```text
+groups = {
+  IT: []
+}
+```
+
+Then:
+
+```js
+groups[key].push(user);
+```
+
+Now:
+
+```text
+groups = {
+  IT: [
+    { name: "Ajay", department: "IT" }
+  ]
+}
+```
+
+---
+
+# 🔥 Next object
+
+Rahul:
+
+```text
+department = "HR"
+```
+
+Create:
+
+```text
+HR: []
+```
+
+Then add Rahul.
+
+Now:
+
+```text
+{
+  IT: [
+    Ajay
+  ],
+
+  HR: [
+    Rahul
+  ]
+}
+```
+
+---
+
+# 🔥 Next object
+
+Amit:
+
+```text
+department = "IT"
+```
+
+`IT` already exists.
+
+So:
+
+```js
+groups.IT.push(Amit);
+```
+
+Now:
+
+```text
+IT: [
+  Ajay,
+  Amit
+]
+```
+
+---
+
+# 🔥 Final object
+
+```text
+{
+  IT: [
+    Ajay,
+    Amit
+  ],
+
+  HR: [
+    Rahul,
+    Priya
+  ]
+}
+```
+
+---
+
+# 🔥🔥🔥 Why use `reduce()`?
+
+Because we are converting:
+
+```text
+Array
+```
+
+into:
+
+```text
+Object
+```
+
+And `reduce()` is perfect when we want to build one final result.
+
+Think:
+
+```text
+reduce()
+→ "I want to process everything and build ONE result."
+```
+
+---
+
+# 🔥🔥 Group by another property
+
+The same function can group by:
+
+```text
+department
+age
+city
+role
+category
+status
+```
+
+Example:
+
+```js
+const products = [
+  { name: "Phone", category: "Electronics" },
+  { name: "Shirt", category: "Clothing" },
+  { name: "Laptop", category: "Electronics" },
+  { name: "Jeans", category: "Clothing" },
+];
+
+console.log(groupBy(products, "category"));
+```
+
+Result:
+
+```text
+{
+  Electronics: [
+    Phone,
+    Laptop
+  ],
+
+  Clothing: [
+    Shirt,
+    Jeans
+  ]
+}
+```
+
+---
+
+# 🔥🔥🔥 Group by property — simpler fixed version
+
+If the interviewer specifically asks:
+
+> Group users by department.
+
+You don't need to make it generic.
+
+```js
+function groupByDepartment(users) {
+  return users.reduce((groups, user) => {
+    const department = user.department;
+
+    if (!groups[department]) {
+      groups[department] = [];
+    }
+
+    groups[department].push(user);
+
+    return groups;
+  }, {});
+}
+```
+
+This is easier to explain in an interview.
+
+---
+
+# 🔥🔥🔥 Important Pattern
+
+This pattern:
+
+```js
+if (!groups[key]) {
+  groups[key] = [];
+}
+
+groups[key].push(item);
+```
+
+is extremely important.
+
+It means:
+
+```text
+Does this group exist?
+
+No
+↓
+Create it
+
+Yes
+↓
+Add to existing group
+```
+
+Memorize this pattern.
+
+---
+
+# 🔥🔥🔥 Predict the output
+
+```js
+const users = [
+  { name: "A", role: "developer" },
+  { name: "B", role: "designer" },
+  { name: "C", role: "developer" },
+];
+
+const result = users.reduce((groups, user) => {
+  const key = user.role;
+
+  if (!groups[key]) {
+    groups[key] = [];
+  }
+
+  groups[key].push(user);
+
+  return groups;
+}, {});
+
+console.log(result);
+```
+
+Output conceptually:
+
+```text
+{
+  developer: [
+    { name: "A", role: "developer" },
+    { name: "C", role: "developer" }
+  ],
+
+  designer: [
+    { name: "B", role: "designer" }
+  ]
+}
+```
+
+---
+
+# 🔥🔥🔥 All 6 Questions Together
+
+## 1. Chunk
+
+```text
+[1,2,3,4,5]
+      ↓
+size = 2
+      ↓
+[[1,2], [3,4], [5]]
+```
+
+Think:
+
+```text
+slice() + i += size
+```
+
+---
+
+## 2. Rotate
+
+```text
+[1,2,3,4,5]
+      ↓
+right by 2
+      ↓
+[4,5,1,2,3]
+```
+
+Think:
+
+```text
+slice() + concat()
+```
+
+---
+
+## 3. Move zeros
+
+```text
+[0,1,0,3,12]
+      ↓
+[1,3,12,0,0]
+```
+
+Think:
+
+```text
+non-zero first
+zeros later
+```
+
+---
+
+## 4. Pair sum
+
+```text
+[2,7,11,15]
+target = 9
+
+2 + 7 = 9
+```
+
+Think:
+
+```text
+needed = target - current
+```
+
+and:
+
+```text
+Set
+```
+
+---
+
+## 5. Sort objects
+
+```text
+[
+  { age: 30 },
+  { age: 20 },
+  { age: 25 }
+]
+```
+
+Think:
+
+```js
+sort((a, b) => a.age - b.age);
+```
+
+---
+
+## 6. Group objects
+
+```text
+[
+  { role: "dev" },
+  { role: "qa" },
+  { role: "dev" }
+]
+```
+
+Think:
+
+```text
+role
+ ↓
+key
+ ↓
+array
+```
+
+using:
+
+```js
+reduce();
+```
+
+---
+
+# 🔥🔥🔥 Pattern Recognition Cheat Sheet
+
+```text
+Chunk array
+→ slice() + jump by size
+
+Rotate array
+→ cut + join in different order
+
+Move zeros
+→ keep non-zero values first
+
+Pair sum
+→ target - current
+
+Sort objects
+→ sort() + comparator
+
+Group objects
+→ reduce() + dynamic keys
+```
+
+---
+
+# 🧠 VERY IMPORTANT INTERVIEW PATTERNS
+
+### Pattern 1 — Dynamic object key
+
+You will see:
+
+```js
+groups[key];
+```
+
+This means:
+
+> Use the value stored in `key` as the object property.
+
+Example:
+
+```js
+const key = "IT";
+
+groups[key];
+```
+
+means:
+
+```js
+groups.IT;
+```
+
+---
+
+### Pattern 2 — `target - current`
+
+For pair-sum problems:
+
+```js
+const needed = target - num;
+```
+
+If:
+
+```text
+target = 10
+num = 6
+```
+
+then:
+
+```text
+needed = 4
+```
+
+So we ask:
+
+> Have I already seen `4`?
+
+---
+
+### Pattern 3 — `reduce()` to group
+
+Remember:
+
+```js
+array.reduce((result, item) => {
+  const key = item.property;
+
+  if (!result[key]) {
+    result[key] = [];
+  }
+
+  result[key].push(item);
+
+  return result;
+}, {});
+```
+
+This pattern appears constantly in real JavaScript work.
+
+---
+
+# 🔥🔥🔥 Complexity
+
+### Chunk
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+### Rotate
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+for the `slice()` approach.
+
+### Move zeros
+
+Two-pointer/in-place:
+
+```text
+Time:  O(n)
+Space: O(1)
+```
+
+### Pair sum
+
+Brute force:
+
+```text
+Time: O(n²)
+```
+
+Set approach:
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+### Sort objects
+
+```text
+Time: O(n log n)
+```
+
+because sorting is involved.
+
+### Group objects
+
+```text
+Time:  O(n)
+Space: O(n)
+```
+
+---
+
+# 🧠 FINAL MEMORY SHEET
+
+```text
+CHUNK
+[1,2,3,4,5]
+     ↓ size 2
+[[1,2],[3,4],[5]]
+```
+
+```text
+ROTATE RIGHT
+[1,2,3,4,5]
+     ↓ 2
+[4,5,1,2,3]
+```
+
+```text
+MOVE ZEROS
+[0,1,0,3,12]
+     ↓
+[1,3,12,0,0]
+```
+
+```text
+PAIR SUM
+[2,7,11,15]
+target = 9
+
+needed = target - current
+```
+
+```text
+SORT OBJECTS
+a.age - b.age
+→ ascending
+
+b.age - a.age
+→ descending
+```
+
+```text
+GROUP OBJECTS
+
+item.property
+      ↓
+     key
+      ↓
+groups[key] = []
+      ↓
+groups[key].push(item)
+```
+
+### 🔥🔥🔥 One-line memory trick
+
+```text
+Chunk  → break into pieces
+Rotate → move beginning/end
+Zeros  → non-zero first
+Pairs  → target - current
+Sort   → comparator
+Group  → property → key → array
+```
